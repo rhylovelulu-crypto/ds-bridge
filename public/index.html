@@ -157,6 +157,24 @@
   }
   .toast.on { opacity: 1; }
   .toast.err { border-color: #7f2c2c; color: #fca5a5; }
+
+  /* numbered guide steps (手机/局域网使用指南) */
+  .steps { display: flex; flex-direction: column; gap: 10px; }
+  .step {
+    display: flex; gap: 12px; align-items: flex-start;
+    background: var(--panel2); border: 1px solid var(--line); border-radius: 8px;
+    padding: 11px 14px; font-size: 13px;
+  }
+  .stepn {
+    flex: 0 0 auto; width: 22px; height: 22px; border-radius: 50%;
+    background: var(--accent); color: #fff; font-weight: 700; font-size: 12px;
+    display: flex; align-items: center; justify-content: center; margin-top: 1px;
+  }
+  .step code {
+    background: #1b2330; padding: 1px 5px; border-radius: 4px; color: #9fd0ff; font-size: 12px;
+    word-break: break-all;
+  }
+  code.copyable { display: block; margin: 6px 0 4px; padding: 7px 10px; background: #0b0f14; color: #a9c2da; }
 </style>
 </head>
 <body>
@@ -181,35 +199,15 @@
 <!-- ============ 登录 ============ -->
 <section class="page on" id="page-login">
   <div class="card" style="margin-bottom:14px">
-    <div class="bar" style="margin-bottom:12px">
-      <strong style="font-size:13px">在下面直接登录 DeepSeek</strong>
-      <span class="hint">画面是真实浏览器，扫码或输密码都行，登录状态自动保存。</span>
+    <div class="bar" style="margin-bottom:6px">
+      <strong style="font-size:15px">登录 DeepSeek</strong>
       <span style="margin-left:auto"></span>
-      <span id="v-status" class="hint">未连接</span>
-      <button class="btn ghost" id="btn-v-refresh">刷新画面</button>
-      <button class="btn ghost" id="btn-v-home">回到首页</button>
+      <span id="v-status" class="hint"></span>
     </div>
-
-    <div class="viewwrap">
-      <div class="viewbar">
-        <span class="url" id="v-url">about:blank</span>
-        <button class="btn ghost" id="btn-v-reload" style="padding:5px 11px;font-size:12px">重新加载</button>
-        <button class="btn ghost" id="btn-v-back" style="padding:5px 11px;font-size:12px">后退</button>
-      </div>
-      <canvas id="screen" width="1280" height="820"></canvas>
-      <div class="overlay" id="v-overlay">
-        <div>正在连接浏览器画面…</div>
-        <div class="hint">如果一直停在这里，检查服务日志或点「刷新画面」。</div>
-      </div>
-    </div>
-
-    <div class="bar" style="margin-top:12px">
-      <input type="text" id="v-type" placeholder="在这里输入文字，回车发送到页面（适合输手机号/邮箱）" style="flex:1;min-width:220px" />
-      <button class="btn ghost" id="btn-v-send">输入</button>
-      <button class="btn ghost" id="btn-v-enter">回车</button>
-    </div>
-    <div class="hint" style="margin-top:8px">
-      提示：先在画面上点一下输入框让它获得焦点，再用上面的输入框打字。
+    <div class="bar" style="margin-top:10px">
+      <button class="btn" id="btn-open-login" style="padding:10px 22px;font-size:14px">打开 DeepSeek 登录窗口</button>
+      <button class="btn ghost" id="btn-check-login">检查登录状态</button>
+      <span class="hint">点上面的按钮，在弹出的浏览器窗口里扫码或输密码登录，登录状态自动保存。</span>
     </div>
   </div>
 
@@ -217,22 +215,121 @@
     <div class="card">
       <h2>登录状态</h2>
       <div class="row"><span>DeepSeek 账号</span><span id="s-login">未检查</span></div>
+      <div class="row"><span>登录身份</span><span id="s-account">—</span></div>
       <div class="row"><span>Token</span><span id="s-token">—</span></div>
       <div class="row"><span>当前页面</span><span id="s-page" style="font-size:11px">—</span></div>
-    </div>
-    <div class="card">
-      <h2>快速跳转</h2>
-      <div class="bar">
-        <button class="btn ghost" data-goto="https://chat.deepseek.com/sign_in">登录页</button>
-        <button class="btn ghost" data-goto="https://chat.deepseek.com/">聊天页</button>
+      <div class="bar" style="margin-top:12px">
+        <button class="btn" id="btn-open-login">打开 DeepSeek 登录</button>
+        <button class="btn danger" id="btn-logout">退出登录</button>
+        <button class="btn ghost" id="btn-switch-account">切换账号</button>
       </div>
-      <div class="hint" style="margin-top:10px">登录成功后这个窗口会停在聊天页，可以关掉不用管。</div>
+      <div class="hint" style="margin-top:8px">
+        推荐点「打开 DeepSeek 登录」：会在桥自带的浏览器里直接打开登录页，你在真实窗口里完成登录，
+        不用在上面的小画面里操作。登录完回来点「检查」或等状态自动刷新。
+        切换账号 = 退出后重新登录另一个账号，配置和预设不受影响。
+      </div>
+      <div class="bar" style="margin-top:8px">
+        <button class="btn ghost" id="btn-check-login">检查登录状态</button>
+      </div>
     </div>
-    <div class="card">
-      <h2>用它做什么</h2>
-      <div class="hint">
-        登录后即可在「预设」页导入酒馆预设，在「测试」页验证连通性。
-        所有请求都走这个已登录会话。
+    <div class="card" style="grid-column: 1 / -1">
+      <h2>手机 / 局域网使用指南</h2>
+      <div class="hint" style="margin-bottom:10px">
+        想在手机上用这个桥、不用一直守着电脑？按下面五步走。前提：手机和这台电脑连的是<b>同一个 WiFi</b>。
+      </div>
+      <div class="steps">
+        <div class="step">
+          <div class="stepn">1</div>
+          <div>在电脑上用桌面模式（<code>start.bat</code>）登录过 DeepSeek 一次。已经登录过就跳过这步。</div>
+        </div>
+        <div class="step">
+          <div class="stepn">2</div>
+          <div>双击项目目录里的 <code>start-server.bat</code> —— 浏览器无头运行（不弹任何窗口），服务开放给局域网。之后电脑可以锁屏或最小化，服务照常跑。</div>
+        </div>
+        <div class="step">
+          <div class="stepn">3</div>
+          <div>手机浏览器打开 <code id="lan-url">http://&lt;电脑IP&gt;:8788/</code>（下面已自动填好本机地址），在「状态」页把 API Key 粘进输入框 —— 只需粘一次，手机浏览器会记住。</div>
+        </div>
+        <div class="step">
+          <div class="stepn">4</div>
+          <div>手机上的酒馆/客户端这样填：<br />
+            Base URL：<code id="lan-base">http://&lt;电脑IP&gt;:8788/v1</code><br />
+            API Key：config.json 里的 <code>sk-dsb-...</code><br />
+            模型：<code>deepseek-web</code>（带思考用 <code>deepseek-web-think</code>）</div>
+        </div>
+        <div class="step">
+          <div class="stepn">5</div>
+          <div>第一次连接如果失败，是 Windows 防火墙拦了。在电脑上以管理员身份运行一次：<br />
+            <code class="copyable" id="fw-cmd">New-NetFirewallRule -DisplayName "ds-bridge" -Direction Inbound -LocalPort 8788 -Protocol TCP -Action Allow</code>
+            <button class="btn ghost" id="btn-copy-fw" style="padding:4px 10px;font-size:11px">复制命令</button></div>
+        </div>
+      </div>
+      <div class="bar" style="margin-top:12px">
+        <span class="hint">本机局域网地址：</span>
+        <code id="lan-ip" style="color:var(--ok)">检测中…</code>
+        <span class="hint">（手机打不开时优先检查：手机连的是不是这个 WiFi、防火墙是否放行）</span>
+      </div>
+      <div class="hint" style="margin-top:8px">
+        想完全不开电脑？把整个目录拷到旧电脑 / NAS / 云服务器，装 Node 22+，设 <code>DS_HEADLESS=1</code> 和
+        <code>DS_BRIDGE_HOST=0.0.0.0</code> 跑 <code>node server.mjs</code>。登录态迁移：把用户目录下的
+        <code>.ds-bridge-profile-cn</code>（和 intl）整个拷过去即可，不用重新登录。
+      </div>
+      <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--line)">
+        <h2 style="margin-bottom:8px">手机当服务器（Termux / Android）</h2>
+        <div class="hint" style="margin-bottom:8px">
+          让手机本身就是服务器：Termux 里跑 Node + Chromium，酒馆连手机本机 <code>127.0.0.1:8788</code>，电脑可以彻底关掉。
+        </div>
+        <div class="steps">
+          <div class="step">
+            <div class="stepn">1</div>
+            <div>
+              手机装 <b>Termux</b>。它就是一个普通安卓应用，不需要应用商店：<br />
+              ① 手机浏览器打开 <a href="https://f-droid.org/packages/com.termux/" target="_blank" style="color:var(--accent)">https://f-droid.org/packages/com.termux/</a><br />
+              ② 往下滑，点「Download APK」，下载后点开安装（弹"未知来源"提示就选允许）<br />
+              ③ <b>注意别装错</b>：Google Play 和 GitHub 上的版本都已停更，认准 F-Droid
+            </div>
+          </div>
+          <div class="step">
+            <div class="stepn">2</div>
+            <div>
+              把项目文件传到手机。放在哪都行，记住位置即可：<br />
+              A. 电脑上把 <code>ds-bridge</code> 整个文件夹用微信/QQ/数据线传到手机。微信存的在 <code>/sdcard/Download/微信/</code> 或 <code>/sdcard/Pictures/WeiXin/</code>，QQ 在 <code>/sdcard/Download/QQ/</code>，数据线放哪是哪——不确定就打开手机「文件管理」App 搜 <code>ds-bridge</code><br />
+              B. Termux 里直接联网下载（不依赖传输，放哪都固定）：<code>pkg install curl -y</code> 然后
+              <code class="copyable">curl -L https://gh-proxy.com/https://github.com/misa1ink/ds-bridge/archive/refs/heads/main.tar.gz | tar -xz</code>
+              （会解压出 <code>ds-bridge-main</code> 文件夹，路径就是 <code>~/ds-bridge-main</code>）
+            </div>
+          </div>
+          <div class="step">
+            <div class="stepn">3</div>
+            <div>打开 Termux，先拉唤醒锁防杀后台：下拉通知栏 → Termux 通知 → <b>Acquire wakelock</b>。然后一条命令安装启动——<b>文件放哪都无所谓，路径照你实际位置写即可</b>，代码会自动装到 <code>~/ds-bridge</code>：<br />
+              <code class="copyable" id="termux-cmd">bash /sdcard/Download/ds-bridge/termux-setup.sh</code>
+              <button class="btn ghost" id="btn-copy-termux" style="padding:4px 10px;font-size:11px">复制命令</button><br />
+              <b>路径怎么写都不影响结果</b>：脚本无论从哪运行，都把代码装到固定位置 <code>~/ds-bridge</code>，以后重启只用 <code>bash ~/ds-bridge/termux-setup.sh --start</code>，和原文件夹还在不在无关。<br />
+              <b>完全不想管路径？</b>跳过传输，Termux 里直接在线装（两条命令）：<br />
+              <code class="copyable">pkg install curl -y</code><br />
+              <code class="copyable">curl -L https://gh-proxy.com/https://github.com/misa1ink/ds-bridge/archive/refs/heads/main.tar.gz | tar -xz &amp;&amp; bash ~/ds-bridge-main/termux-setup.sh</code><br />
+              <b>找不到文件夹？</b><code>find /sdcard -maxdepth 3 -name termux-setup.sh 2>/dev/null</code> 搜出真实路径再 bash。<br />
+              如果提示「Permission denied」访问 /sdcard，先执行 <code>termux-setup-storage</code> 并允许文件权限。</div>
+          </div>
+          <div class="step">
+            <div class="stepn">4</div>
+            <div>启动成功后（屏幕显示服务地址），手机浏览器打开 <code>http://127.0.0.1:8788/</code>，「状态」页复制 API Key。酒馆/客户端里：<br />
+              Base URL：<code>http://127.0.0.1:8788/v1</code> · 模型：<code>deepseek-web</code></div>
+          </div>
+          <div class="step">
+            <div class="stepn">5</div>
+            <div><b>登录 DeepSeek</b>（三选一，推荐 A）：<br />
+              A. <b>用电脑的登录态</b>：电脑已登录过的话，把电脑用户目录（<code>C:\Users\你的用户名\</code>）下的 <code>.ds-bridge-profile-cn</code> 文件夹传到手机（同样放哪都行，比如下载目录），Termux 里执行 <code>termux-setup-storage</code> 后（假设放在下载目录）：<code>cp -r /sdcard/Download/.ds-bridge-profile-cn ~/</code>——放别的位置就把路径换掉；找不到就在手机文件管理里确认实际位置再改路径。重启脚本即已登录<br />
+              B. 控制台点「打开 DeepSeek 登录窗口」：无头模式后台建登录标签页，画面看不到，执行后等 1 分钟再点「检查登录状态」，若你在该浏览器 profile 上曾经登录过即会变绿<br />
+              C. 每次都要在手机上重新扫码的话，体验较差，不推荐</div>
+          </div>
+        </div>
+        <div class="hint" style="margin-top:10px">
+          常见问题：后台被杀 → 每次启动前拉 wakelock，或在系统设置里给 Termux 关掉电池优化；
+          chromium 打不开 → Termux 上必须用 <code>pkg install chromium</code> 装的版本，不能用安卓版 Chrome；
+          局域网访问 → 手机和别的设备同一 WiFi，地址是手机的局域网 IP:8788；
+          忘了重启命令 → 永远是 <code>bash ~/ds-bridge/termux-setup.sh --start</code>。
+        </div>
       </div>
     </div>
   </div>
@@ -483,173 +580,121 @@ document.querySelectorAll('nav button').forEach(btn => {
 });
 
 /* ------------------------------------------------------------------ */
-/* live view                                                           */
+/* live view — disabled: login happens in the real browser window now.  */
+/* The screencast canvas was removed from the page; only a tiny status  */
+/* probe remains so "在线" in the header still works.                   */
 /* ------------------------------------------------------------------ */
-const canvas = $('screen');
-const ctx = canvas.getContext('2d');
-let viewSize = { width: 1280, height: 820 };
 let es = null;
-let lastImage = null;
-
-function drawFrame(dataUrl) {
-  const img = new Image();
-  img.onload = () => {
-    if (canvas.width !== img.width || canvas.height !== img.height) {
-      canvas.width = img.width;
-      canvas.height = img.height;
-      viewSize = { width: img.width, height: img.height };
-    }
-    ctx.drawImage(img, 0, 0);
-    $('v-overlay').classList.add('hide');
-    lastImage = dataUrl;
-  };
-  img.src = dataUrl;
-}
 
 function connectView() {
-  if (es) { es.close(); es = null; }
-  const params = new URLSearchParams();
-  if (activeKey) params.set('key', activeKey);
-  if (activeSite) params.set('site', activeSite);
-  const q = params.toString() ? ('?' + params.toString()) : '';
-  es = new EventSource('/v1/view/stream' + q);
-  set('v-status', '连接中…');
-
-  es.addEventListener('open', () => {
-    set('v-status', '画面已连接', 'ok');
+  // No canvas anymore: just check the service is alive for the header dot.
+  fetch('/health').then(r => r.json()).then(() => {
     set('h-conn', '在线');
     $('dot').classList.add('ok');
-  });
-
-  es.addEventListener('frame', ev => {
-    try {
-      const d = JSON.parse(ev.data);
-      // Ignore frames from a site the user just switched away from.
-      if (d.site && activeSite && d.site !== activeSite) return;
-      if (d.dataUrl) drawFrame(d.dataUrl);
-    } catch { /* ignore a partial frame */ }
-  });
-
-  es.addEventListener('nav', ev => {
-    try { set('v-url', JSON.parse(ev.data).url || '—'); } catch { /* ignore */ }
-  });
-
-  es.addEventListener('status', ev => {
-    try {
-      const d = JSON.parse(ev.data);
-      set('v-url', d.url || 'about:blank');
-      set('s-page', d.url || '—');
-    } catch { /* ignore */ }
-  });
-
-  es.addEventListener('error', ev => {
-    if (ev.data) {
-      try { toast(JSON.parse(ev.data).message, true); } catch { /* ignore */ }
-    }
-    set('v-status', '断开，重连中…', 'warn');
-    // EventSource retries on its own; reflect the gap without spamming.
-    if (es && es.readyState === EventSource.CLOSED) {
-      setTimeout(connectView, 2000);
-    }
+  }).catch(() => {
+    set('h-conn', '离线');
+    $('dot').classList.remove('ok');
   });
 }
 
-/** Maps a click on the canvas to page coordinates using the frame's real size. */
-function canvasPoint(ev) {
-  const rect = canvas.getBoundingClientRect();
-  const scaleX = viewSize.width / rect.width;
-  const scaleY = viewSize.height / rect.height;
-  return {
-    x: (ev.clientX - rect.left) * scaleX,
-    y: (ev.clientY - rect.top) * scaleY,
-  };
-}
-
-async function sendInput(payload) {
-  try {
-    const r = await api('/v1/view/input', { method: 'POST', body: payload });
-    if (r && r.ok === false) toast(r.error || '输入失败', true);
-  } catch (e) {
-    toast(e.message, true);
-  }
-}
-
-canvas.addEventListener('click', ev => {
-  const p = canvasPoint(ev);
-  sendInput({ action: 'click', x: p.x, y: p.y });
-});
-
-canvas.addEventListener('mousemove', ev => {
-  // Throttled: the page only needs hover state, not every pixel.
-  if (canvas._moveLock) return;
-  canvas._moveLock = true;
-  setTimeout(() => { canvas._moveLock = false; }, 90);
-  const p = canvasPoint(ev);
-  sendInput({ action: 'move', x: p.x, y: p.y });
-});
-
-canvas.addEventListener('wheel', ev => {
-  ev.preventDefault();
-  const p = canvasPoint(ev);
-  sendInput({ action: 'scroll', x: p.x, y: p.y, deltaY: ev.deltaY });
-}, { passive: false });
-
-// Typing directly on the canvas goes through a capture input to avoid stealing
-// keys from the rest of the UI.
-canvas.addEventListener('keydown', ev => {
-  if (ev.key === 'Enter') { ev.preventDefault(); sendInput({ action: 'key', key: 'Enter' }); }
-  else if (ev.key === 'Backspace') { ev.preventDefault(); sendInput({ action: 'key', key: 'Backspace' }); }
-  else if (ev.key === 'Tab') { ev.preventDefault(); sendInput({ action: 'key', key: 'Tab' }); }
-  else if (ev.key.length === 1) { sendInput({ action: 'type', text: ev.key }); }
-});
-canvas.tabIndex = 0;
-
-$('btn-v-send').onclick = () => {
-  const v = $('v-type').value;
-  if (!v) return;
-  sendInput({ action: 'type', text: v });
-  $('v-type').value = '';
-};
-$('v-type').addEventListener('keydown', ev => {
-  if (ev.key === 'Enter') { ev.preventDefault(); $('btn-v-send').click(); }
-});
-$('btn-v-enter').onclick = () => sendInput({ action: 'key', key: 'Enter' });
-$('btn-v-reload').onclick = () => sendInput({ action: 'navigate', url: 'https://chat.deepseek.com/' });
-$('btn-v-home').onclick = () => sendInput({ action: 'navigate', url: 'https://chat.deepseek.com/' });
-$('btn-v-back').onclick = async () => {
-  try {
-    await fetch('/v1/view/input', {
-      method: 'POST', headers: authHeaders({ 'content-type': 'application/json' }),
-      body: JSON.stringify({ action: 'navigate', url: 'https://chat.deepseek.com/' }),
-    });
-  } catch { /* ignore */ }
-};
-$('btn-v-refresh').onclick = async () => {
-  try {
-    const d = await api('/v1/view/snapshot');
-    if (d.ok && d.image) drawFrame(d.image);
-    else if (d.error) toast(d.error, true);
-  } catch (e) { toast(e.message, true); }
-};
-document.querySelectorAll('[data-goto]').forEach(b => {
-  b.onclick = () => sendInput({ action: 'navigate', url: b.dataset.goto });
-});
+// removed with the canvas
+const canvas = null;
+function drawFrame() {}
+function canvasPoint() { return { x: 0, y: 0 }; }
+async function sendInput() {}
 
 /* ------------------------------------------------------------------ */
 /* login status                                                        */
 /* ------------------------------------------------------------------ */
+/** Formats the account identity for the 登录身份 row. */
+function accountLabel(a) {
+  if (!a) return '已登录（身份未取得）';
+  if (a.email) return a.name ? `${a.name}（${a.email}）` : a.email;
+  if (a.phone) {
+    const p = a.phone.startsWith('+') || a.phone.startsWith('1') && a.phone.length > 11 ? a.phone : (a.areaCode || '') + ' ' + a.phone;
+    return a.name ? `${a.name}（${p}）` : p;
+  }
+  if (a.id) return a.id.slice(0, 8) + '…';
+  return '已登录（未取得身份）';
+}
+
 async function checkLogin() {
   set('s-login', '检查中…');
   try {
     const q = activeSite ? ('?site=' + encodeURIComponent(activeSite)) : '';
     const d = await api('/v1/login/check' + q);
-    if (d.ok) { set('s-login', '已登录', 'ok'); set('s-token', d.tokenLength + ' 字符'); }
-    else { set('s-login', '未登录', 'bad'); set('s-token', '—'); }
+    if (d.ok) {
+      set('s-login', '已登录', 'ok');
+      set('s-account', accountLabel(d.account), d.account ? 'ok' : 'warn');
+      set('s-token', d.tokenLength + ' 字符');
+    } else {
+      set('s-login', '未登录', 'bad');
+      set('s-account', '—');
+      set('s-token', '—');
+    }
   } catch (e) {
     set('s-login', '检查失败', 'bad');
+    set('s-account', '—');
     set('s-token', '—');
   }
 }
+
+/* ------------------------------------------------------------------ */
+/* logout / account switch                                             */
+/* ------------------------------------------------------------------ */
+async function doLogout(asSwitch) {
+  const word = asSwitch ? '切换账号' : '退出登录';
+  if (!confirm(word + '会清掉当前' + (siteList.find(s => s.id === activeSite)?.label || activeSite) + '的登录状态，继续？')) return;
+  try {
+    const d = await api('/v1/account/logout', { method: 'POST', body: { site: activeSite, switch: asSwitch === true } });
+    if (!d.ok) throw new Error(d.error || '失败');
+    toast(asSwitch ? '已退出，用「打开 DeepSeek 登录窗口」登录新账号' : '已退出登录');
+    await checkLogin();
+    await refreshHealth();
+  } catch (e) { toast(e.message, true); }
+}
+$('btn-logout').onclick = () => doLogout(false);
+$('btn-switch-account').onclick = () => doLogout(true);
+
+// Open the sign-in page in the bridge's own browser window (real profile).
+// The system default browser does not share this profile, so it must be the
+// detached window the pool launched — that is also where the login persists.
+$('btn-open-login').onclick = async () => {
+  try {
+    const d = await api('/v1/view/open', { method: 'POST', body: { site: activeSite, url: 'https://chat.deepseek.com/sign_in' } });
+    if (!d.ok) throw new Error(d.error || '打开失败');
+    toast('已在桥的浏览器窗口打开登录页，登录后回到这里检查状态');
+    set('s-login', '等待登录…', 'warn');
+    // Poll a few times so the user sees the flip to 已登录 without manual refresh.
+    let tries = 0;
+    const timer = setInterval(async () => {
+      tries++;
+      try {
+        const q = activeSite ? ('?site=' + encodeURIComponent(activeSite)) : '';
+        const c = await api('/v1/login/check' + q);
+        if (c.ok) {
+          clearInterval(timer);
+          set('s-login', '已登录', 'ok');
+          set('s-account', accountLabel(c.account), c.account ? 'ok' : 'warn');
+          set('s-token', c.tokenLength + ' 字符');
+          toast('登录成功' + (c.account ? '：' + accountLabel(c.account) : ''));
+        } else if (tries > 100) clearInterval(timer);
+      } catch { if (tries > 100) clearInterval(timer); }
+    }, 4000);
+  } catch (e) { toast(e.message, true); }
+};
+$('btn-check-login').onclick = () => checkLogin();
+
+// Copy the firewall rule command from the phone guide.
+$('btn-copy-fw').onclick = async () => {
+  try { await navigator.clipboard.writeText($('fw-cmd').textContent.trim()); toast('已复制，管理员 PowerShell 里粘贴运行'); }
+  catch { toast('复制失败，手动选中命令复制', true); }
+};
+// Copy the Termux install command from the phone guide.
+$('btn-copy-termux').onclick = async () => {
+  try { await navigator.clipboard.writeText($('termux-cmd').textContent.trim()); toast('已复制，到 Termux 里长按粘贴'); }
+  catch { toast('复制失败，手动选中命令复制', true); }
+};
 
 /* ------------------------------------------------------------------ */
 /* presets                                                             */
@@ -888,6 +933,16 @@ async function refreshHealth() {
     if (Array.isArray(d.sites)) {
       siteList = d.sites;
       renderSiteSeg();
+    }
+    // Phone guide: fill LAN addresses once the server reports its IPs.
+    const ips = Array.isArray(d.lanIps) ? d.lanIps : [];
+    if (ips.length) {
+      const port = d.port || 8788;
+      set('lan-ip', ips.join('  |  '));
+      set('lan-url', `http://${ips[0]}:${port}/`);
+      set('lan-base', `http://${ips[0]}:${port}/v1`);
+    } else {
+      set('lan-ip', '未检测到局域网网卡（可能只有内网虚拟网卡）');
     }
     set('h-conn', '在线');
     $('dot').classList.add('ok');

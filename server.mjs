@@ -1,11 +1,11 @@
 import http from 'node:http';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { ensureBrowser } from './lib/cdp.mjs';
 import { DeepSeekWeb } from './lib/deepseek.mjs';
 import { loadConfig, saveConfig, matchKey, normalizeKeys, generateKey } from './lib/config.mjs';
-import { BrowserView } from './lib/view.mjs';
 import { SITES, DEFAULT_SITE, listSites, resolveSite, getSite, isKnownSite } from './lib/sites.mjs';
 import {
   parsePreset, savePreset, listPresets, loadPreset, deletePreset,
@@ -16,7 +16,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const CFG = loadConfig();
 const PORT = CFG.server.port;
-const HOST = CFG.server.host;
+// DS_BRIDGE_HOST overrides config so the headless launcher can open the
+// bridge to the LAN without touching config.json.
+const HOST = process.env.DS_BRIDGE_HOST || CFG.server.host;
 const CDP_PORT = Number(process.env.DS_CDP_PORT || 0);
 const CONCURRENCY = CFG.concurrency;
 const MODEL_ALIAS = CFG.modelAlias;
@@ -47,9 +49,35 @@ function poolFor(siteId) {
   return pool;
 }
 
+/** True when the pooled browser socket has died (user closed the window). */
+function poolIsDead(pool) {
+  return Boolean(pool && pool.cdp && (!pool.cdp.ws || pool.cdp.ws.readyState !== 1));
+}
+
+/** Drops every cached object of a dead pool so getBrowser relaunches it. */
+function resetPool(siteId) {
+  const pool = pools.get(siteId);
+  if (!pool) return;
+  log(`[${siteId}] browser connection lost, will relaunch`);
+  pool.promise = null;
+  pool.cdp = null;
+  pool.workers = [];
+  pool.waiters = [];
+  pool.view = null;
+  pool.viewTabPromise = null;
+}
+
 async function getBrowser(siteId) {
   const site = siteConfig(siteId);
-  const pool = poolFor(site.id);
+  let pool = poolFor(site.id);
+
+  // The detached browser can be closed by hand at any moment. Detect the dead
+  // socket here — the single entry point every pool consumer goes through —
+  // so the next request relaunches the browser instead of failing forever.
+  if (poolIsDead(pool)) {
+    resetPool(site.id);
+    pool = poolFor(site.id);
+  }
 
   if (!pool.promise) {
     pool.promise = ensureBrowser({ port: site.cdpPort || 0, profileSlot: site.profileSlot })
@@ -74,82 +102,14 @@ async function getBrowser(siteId) {
 /* live view: mirrors the DeepSeek tab into the web console             */
 /* ------------------------------------------------------------------ */
 
-const sseClients = new Set();
-
 /**
- * The login view gets its own tab so a screencast never competes with a
- * completion running on a worker tab. Each site has its own view.
+ * The live-view screencast was retired: login happens in the real browser
+ * window ("open login" button), so no mirror tab is created anymore.
  */
-async function getViewTab(siteId) {
-  const site = siteConfig(siteId);
-  const pool = poolFor(site.id);
-  const cdp = await getBrowser(site.id);
 
-  if (!pool.viewTabPromise) {
-    pool.viewTabPromise = (async () => {
-      const tab = await cdp.newTab(site.origin + '/');
-      const view = new BrowserView(tab, {
-        onFrame: frame => broadcast('frame', { ...frame, site: site.id }),
-        onNav: info => broadcast('nav', { ...info, site: site.id }),
-      });
-      await view.start();
-      await applyUiLocale(view, site);
-      pool.view = view;
-      return view;
-    })().catch(err => {
-      pool.viewTabPromise = null;
-      throw err;
-    });
-  }
-  return pool.viewTabPromise;
-}
+/* applyUiLocale lived with the mirror view and was retired with it. */
 
-/**
- * Steers the mirrored UI to the site's language.
- *
- * Verified against the live app: the locale preference lives in localStorage
- * under this key and only affects display — the account, token and chat
- * history are unchanged. So this is presentation, not a region change.
- *
- * The tab may still be on about:blank when the view is created, where
- * localStorage throws a SecurityError, so wait for the real origin first.
- */
-async function applyUiLocale(view, site) {
-  if (!site.uiLocale) return;
-  try {
-    let ready = false;
-    for (let i = 0; i < 40; i++) {
-      const href = await view.cdp.eval('location.href').catch(() => '');
-      if (String(href).startsWith(site.origin)) {
-        const ok = await view.cdp.eval("typeof localStorage !== 'undefined'").catch(() => false);
-        if (ok) { ready = true; break; }
-      }
-      await new Promise(r => setTimeout(r, 250));
-    }
-    if (!ready) return;
-
-    const want = JSON.stringify({ value: site.uiLocale, __version: '0' });
-    const current = await view.cdp.eval(
-      "localStorage.getItem('__appKit_@deepseek/chat_localePreference')"
-    ).catch(() => null);
-    if (current === want) return;
-
-    await view.cdp.eval(
-      `localStorage.setItem('__appKit_@deepseek/chat_localePreference', ${JSON.stringify(want)})`
-    );
-    await view.cdp.send('Page.reload');
-    await new Promise(r => setTimeout(r, 2500));
-  } catch (err) {
-    log(`[${site.id}] ui locale skip:`, String(err.message).slice(0, 80));
-  }
-}
-
-function broadcast(event, data) {
-  for (const res of sseClients) {
-    if (res.writableLength > 4 * 1024 * 1024) continue;
-    try { res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`); } catch { sseClients.delete(res); }
-  }
-}
+/* sseClients/broadcast lived with the screencast and were retired with it. */
 
 /**
  * Builds one worker. Every worker gets its own tab — including the first one.
@@ -342,7 +302,20 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
-    if (url.pathname === '/health') {
+    /**
+ * LAN IPv4 addresses of this machine, for the console's phone-usage guide.
+ * Cached once: interfaces do not change while the bridge runs.
+ */
+const LAN_IPS = (() => {
+  try {
+    return Object.values(os.networkInterfaces())
+      .flat()
+      .filter(n => n && n.family === 'IPv4' && !n.internal)
+      .map(n => n.address);
+  } catch { return []; }
+})();
+
+if (url.pathname === '/health') {
       const live = loadConfig();
       const active = siteConfig(live.site);
 
@@ -378,6 +351,8 @@ const server = http.createServer(async (req, res) => {
         siteOrigin: active.origin,
         siteLocale: active.locale,
         sites: siteStates,
+        lanIps: LAN_IPS,
+        port: PORT,
       });
       return;
     }
@@ -628,96 +603,70 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
-    /* ---- live login view ------------------------------------------------- */
+    /* ---- live login view (retired) --------------------------------------- */
 
     if (url.pathname === '/v1/view/stream') {
-      // SSE: one persistent connection carrying screencast frames.
+      // View is retired; answer with an immediate error event so old clients
+      // stop asking instead of hanging on an empty stream.
       res.writeHead(200, {
         'content-type': 'text/event-stream; charset=utf-8',
         'cache-control': 'no-cache, no-transform',
         connection: 'keep-alive',
-        'x-accel-buffering': 'no',
-        'access-control-allow-origin': '*',
       });
-      res.write(': connected\n\n');
-      sseClients.add(res);
-
-      const keepAlive = setInterval(() => {
-        try { res.write(': ping\n\n'); } catch { /* dropped below */ }
-      }, 15000);
-
-      const cleanup = () => {
-        clearInterval(keepAlive);
-        sseClients.delete(res);
-      };
-      req.on('close', cleanup);
-      res.on('error', cleanup);
-
-      try {
-        const v = await getViewTab(url.searchParams.get('site') || cfg.site);
-        const st = await v.status();
-        res.write(`event: status\ndata: ${JSON.stringify(st)}\n\n`);
-
-        // Screencast only emits on change, so a static page would leave a new
-        // client staring at an empty canvas. Push one frame unconditionally.
-        const first = await v.snapshot().catch(() => null);
-        if (first) res.write(`event: frame\ndata: ${JSON.stringify({ dataUrl: first, ...v.viewport, initial: true })}\n\n`);
-      } catch (err) {
-        res.write(`event: error\ndata: ${JSON.stringify({ message: String(err.message || err) })}\n\n`);
-      }
+      res.write(`event: error\ndata: ${JSON.stringify({ message: 'view disabled: log in via the real browser window' })}\n\n`);
+      res.end();
       return;
     }
 
     if (url.pathname === '/v1/view/status') {
-      try {
-        const v = await getViewTab(url.searchParams.get('site') || cfg.site);
-        json(res, 200, { ok: true, ...(await v.status()) });
-      } catch (err) {
-        json(res, 200, { ok: false, error: String(err.message || err) });
-      }
+      json(res, 200, { ok: false, error: 'view disabled' });
       return;
     }
 
     if (url.pathname === '/v1/view/snapshot') {
-      try {
-        const v = await getViewTab(url.searchParams.get('site') || cfg.site);
-        const dataUrl = await v.snapshot();
-        json(res, 200, { ok: true, image: dataUrl });
-      } catch (err) {
-        json(res, 200, { ok: false, error: String(err.message || err) });
-      }
+      json(res, 200, { ok: false, error: 'view disabled' });
       return;
     }
 
     if (url.pathname === '/v1/view/input' && req.method === 'POST') {
-      // Forwarded pointer/keyboard input from the mirrored canvas.
+      // Input forwarding belonged to the retired mirror; nothing sends it now.
+      json(res, 200, { ok: false, error: 'view disabled' });
+      return;
+    }
+
+    /**
+     * Opens a URL in the real browser window of a site's pool (the detached
+     * Edge/Chrome that holds the login profile) and brings it to the front.
+     * Used by the console's "open DeepSeek login" button: the default system
+     * browser does not share this profile, so the URL must open here.
+     */
+    if (url.pathname === '/v1/view/open' && req.method === 'POST') {
       const body = JSON.parse(await readBody(req) || '{}');
+      const target = siteConfig(body.site || cfg.site);
+      const targetUrl = String(body.url || target.origin + '/sign_in');
       try {
-        const v = await getViewTab(url.searchParams.get('site') || cfg.site);
-        const action = String(body.action || '');
-
-        if (action === 'click') {
-          await v.click(Number(body.x) || 0, Number(body.y) || 0, body.button === 'right' ? 'right' : 'left');
-        } else if (action === 'move') {
-          await v.mouse('move', Number(body.x) || 0, Number(body.y) || 0);
-        } else if (action === 'scroll') {
-          await v.scroll(Number(body.x) || 0, Number(body.y) || 0, Number(body.deltaY) || 0);
-        } else if (action === 'type') {
-          await v.type(String(body.text ?? ''));
-        } else if (action === 'key') {
-          await v.key(String(body.key || 'Enter'));
-        } else if (action === 'navigate') {
-          await v.navigate(String(body.url || 'https://chat.deepseek.com/'));
+        const headless = process.env.DS_HEADLESS === '1';
+        const cdp = await getBrowser(target.id);
+        const created = await cdp.send('Target.createTarget', { url: targetUrl }, null);
+        // Headless mode (Termux / servers) has no window to bring forward —
+        // the profile login still works, the user just never sees a page.
+        if (!headless) {
+          const { sessionId } = await cdp.send('Target.attachToTarget', { targetId: created.targetId, flatten: true }, null);
+          await cdp.send('Page.bringToFront', {}, sessionId).catch(() => {});
+          // bringToFront alone loses to a minimized window; normalize + focus the
+          // OS window so the sign-in page is unmissable.
+          try {
+            const { windowId } = await cdp.send('Browser.getWindowForTarget', { targetId: created.targetId }, null);
+            await cdp.send('Browser.setWindowBounds', { windowId, bounds: { windowState: 'normal' } }, null);
+            await cdp.send('Browser.setWindowBounds', { windowId, bounds: { windowState: 'fullscreen' } }, null)
+              .then(() => cdp.send('Browser.setWindowBounds', { windowId, bounds: { windowState: 'normal' } }, null))
+              .catch(() => {});
+          } catch { /* older browsers without Browser domain */ }
+          log(`[${target.id}] opened in real window: ${targetUrl}`);
         } else {
-          json(res, 400, { ok: false, error: 'unknown action: ' + action });
-          return;
+          log(`[${target.id}] headless login tab created: ${targetUrl}`);
         }
-
-        // A click may change the page; push a fresh frame right away so the UI
-        // never waits for the next screencast tick to show the result.
-        const image = await v.snapshot().catch(() => null);
-        if (image) broadcast('frame', { dataUrl: image, width: v.viewport.width, height: v.viewport.height, forced: true });
-        json(res, 200, { ok: true });
+        json(res, 200, { ok: true, url: targetUrl, site: target.id, headless });
       } catch (err) {
         json(res, 200, { ok: false, error: String(err.message || err) });
       }
@@ -882,6 +831,37 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
+    /**
+     * Wipes the login state of one site: profile cookies, page localStorage
+     * and every worker's cached chat session. With switch:true the mirrored
+     * tab is parked on the sign-in page so a different account can log in
+     * immediately — no need to touch the real browser window.
+     */
+    if (url.pathname === '/v1/account/logout' && req.method === 'POST') {
+      const body = JSON.parse(await readBody(req) || '{}');
+      const target = siteConfig(body.site || cfg.site);
+      const asSwitch = body.switch === true;
+      try {
+        const pool = poolFor(target.id);
+        const cdp = await getBrowser(target.id);
+        // Cookies are profile-wide, and the profile is per-site, so this only
+        // logs out the account of this endpoint — the other site is untouched.
+        await cdp.send('Network.clearBrowserCookies', {}, null).catch(() => {});
+
+        for (const w of pool.workers) {
+          try { await w.cdp.eval(`try { localStorage.clear(); } catch (e) {}`); } catch { /* dead tab */ }
+          w.sessionId = null;
+          w.parentMessageId = null;
+          w._pageReady = false;
+        }
+        log(`[${target.id}] ${asSwitch ? 'account switch' : 'logout'} done`);
+        json(res, 200, { ok: true, mode: asSwitch ? 'switch' : 'logout', site: target.id });
+      } catch (err) {
+        json(res, 200, { ok: false, error: String(err.message || err) });
+      }
+      return;
+    }
+
     if (url.pathname === '/v1/login/check') {
       // ?site= lets the console probe the non-active endpoint without switching.
       const checkSite = url.searchParams.get('site') || cfg.site;
@@ -889,8 +869,14 @@ const server = http.createServer(async (req, res) => {
       try {
         await worker.ensurePage();
         const token = await worker.token();
+        // Best-effort account read: a missing endpoint must not break the
+        // login check, so failures just mean "logged in, identity unknown".
+        const account = await worker.accountInfo().catch(() => null);
         release(worker);
-        json(res, 200, { ok: true, site: worker.site.id, label: worker.site.label, tokenLength: token.length });
+        json(res, 200, {
+          ok: true, site: worker.site.id, label: worker.site.label, tokenLength: token.length,
+          account: account || null,
+        });
       } catch (err) {
         release(worker);
         json(res, 200, { ok: false, site: checkSite, error: String(err.message || err) });
@@ -925,6 +911,7 @@ server.listen(PORT, HOST, () => {
   log(`active site: ${active.id} (${active.label}) → ${active.origin}`);
   // Only the active site is warmed: starting both browsers on boot would open
   // two windows nobody asked for, and the idle one would hold a login slot.
+  // getBrowser launches minimized, so warmup never pops a window to the front.
   getBrowser(active.id).catch(e => log(`[${active.id}] browser warmup failed:`, e.message));
 });
 

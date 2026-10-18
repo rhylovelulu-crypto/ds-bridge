@@ -51,12 +51,31 @@ start.bat --status        只看是否在运行
 
 | 页 | 干什么 |
 |---|---|
-| **登录** | DeepSeek 真实界面直接嵌在页面里，扫码/密码登录，登录态自动保存 |
+| **登录** | 点「打开 DeepSeek 登录窗口」，在弹出的真实浏览器窗口里扫码/输密码登录，登录态自动保存 |
 | **预设** | 拖入酒馆预设或破限文本，立即生效并落盘 |
 | **测试** | 连通性自测、批量填表试跑 |
 | **状态** | 服务状态、API Key、酒馆配置一栏照抄 |
 
 顶栏右上角是**入口切换**：`国内站` / `国际站`。带绿点表示该入口的浏览器已经起来了。
+
+### 登录
+
+登录页只有两个按钮：
+
+- **打开 DeepSeek 登录窗口**（推荐）：在桥自带的浏览器窗口里打开登录页并弹到前台，你在真实窗口里完成登录。那个窗口平时最小化待在任务栏，不点按钮不会弹出来
+- **检查登录状态**：手动刷新登录状态；「登录身份」一行会显示当前账号（手机号/邮箱，DeepSeek 返回的打码格式）
+
+登录成功后浏览器窗口可以最小化或不管它，**不要关掉整个浏览器进程**——关了也没事，下一个请求会自动重启浏览器并复用磁盘上的登录态，但重启期间会断几秒。
+
+### 无头常驻（挂机 / 手机用）
+
+**双击 `start-server.bat`**：浏览器无头运行（不弹任何窗口），服务绑到 `0.0.0.0` 允许局域网访问。
+
+- 前提：`config.json` 里已有 API key（没有会拒绝启动，防止账号裸奔在局域网）
+- 登录态复用 profile 目录，先在桌面模式（`start.bat`）登录过一次即可
+- 手机上访问 `http://<电脑局域网IP>:8788/`，粘入 API key 即可；客户端 Base URL 填 `http://<IP>:8788/v1`
+- 第一次可能要放行 Windows 防火墙：`New-NetFirewallRule -DisplayName "ds-bridge" -Direction Inbound -LocalPort 8788 -Protocol TCP -Action Allow`
+- 同一份代码也能跑在云服务器/NAS 上（Node 22+ 即可），登录态迁移：把用户目录下的 `.ds-bridge-profile-cn`（和 intl）整个拷过去，不用重新登录
 
 ### 手动启动
 
@@ -67,6 +86,8 @@ cd E:\工作区\ds-bridge
 node scripts\init-config.mjs   # 仅首次
 node server.mjs
 ```
+
+环境变量：`DS_HEADLESS=1` 无头浏览器；`DS_BRIDGE_HOST=0.0.0.0` 开放局域网（其余见「配置」一节）。
 
 ---
 
@@ -112,26 +133,16 @@ DeepSeek 两个区域用的是**同一个域名**，靠账号所属集群和 loc
 
 ---
 
-## 登录页是怎么做到的
+## 登录是怎么做到的
 
-DeepSeek 有 `X-Frame-Options`，不能 iframe 嵌。所以这里不是一个 iframe，是**画面镜像**：
+登录发生在**桥自带的浏览器窗口**里（不是系统默认浏览器——它没有登录 profile）。控制台的「打开 DeepSeek 登录窗口」按钮通过 CDP 在那个浏览器里开一个登录页标签并弹到前台，你在真实窗口里扫码或输密码，凭据进的是真表单，登录状态和直接用浏览器完全一样。
 
-```
-真实浏览器标签页 --CDP Page.startScreencast--> JPEG 帧 --SSE--> 网页 <canvas>
-                <--CDP Input.dispatchMouseEvent-- 鼠标点击 --+
-                <--CDP Input.insertText--------- 键盘输入 --+
-```
+- 浏览器平时**最小化待在任务栏**，只有点按钮才会弹到前台——自动恢复/重启时也不会抢焦点
+- 登录态存在独立 profile 目录（`.ds-bridge-profile-cn` / `.ds-bridge-profile-intl`），落盘、长期有效
+- 「登录身份」显示的是 DeepSeek `users/current` 接口返回的账号信息（手机号/邮箱为官方打码格式）
+- 画面镜像（screencast 画布登录）已移除：不再有闪动的嵌入画面，资源占用更低
 
-你在网页里点的每一个像素，都会转发到真实页面；页面每变一次，网页上就重画一次。
-输入的凭据进了真浏览器的真表单，所以登录状态和直接用浏览器完全一样。
-
-- 画面独立占用一个标签页，不会跟填表请求抢资源
-- 输入用 `Input.insertText` 而不是逐字模拟按键，中文和二维码登录都正常
-- 每次点击后立即补一帧，不用等下个刷新周期
-
-**首次使用**：在「登录」页扫码或输手机号，登录成功后这个页面就可以扔着不管了。
-
-> 也可以不用网页，直接在自动弹出的浏览器窗口里登录，效果一样。
+**首次使用**：点「打开 DeepSeek 登录窗口」→ 扫码或输手机号 → 回控制台看状态变绿。之后一般不用再管。
 
 ---
 
@@ -236,18 +247,14 @@ Model    : deepseek-web          # 带思考：deepseek-web-think
 
 除 `/health`、首页和 `/v1/console/bootstrap` 外，所有接口都要 `Authorization: Bearer <key>`。
 
-`/v1/console/bootstrap` 只对 `127.0.0.1` 开放，用来把 key 交给本机网页 —— 因为 EventSource 发不了请求头，画面流只能用 `?key=` 认证。
+`/v1/console/bootstrap` 只对 `127.0.0.1` 开放，把 key 交给本机网页。手机/远程访问时拿不到它，在控制台「状态」页手动粘一次 key 即可（浏览器会记住）。
 
-### 登录画面
+### 账号
 
 | 端点 | 用途 |
 |---|---|
-| `GET /v1/view/stream?key=&site=` | SSE 画面流，持续推 JPEG 帧 |
-| `GET /v1/view/snapshot?site=` | 单帧截图（兜底） |
-| `GET /v1/view/status?site=` | 当前 URL、帧数、视口 |
-| `POST /v1/view/input` | 转发输入：`click` / `move` / `scroll` / `type` / `key` / `navigate` |
-
-`site` 省略时用当前启用的入口。
+| `POST /v1/view/open` | 在桥的浏览器窗口里打开 URL（默认登录页）并弹到前台 |
+| `POST /v1/account/logout` | 退出登录：`{"site":"cn","switch":true}` = 清 cookies/localStorage 并重置 worker 会话 |
 
 ### 入口切换
 
@@ -255,7 +262,7 @@ Model    : deepseek-web          # 带思考：deepseek-web-think
 |---|---|
 | `GET /v1/sites` | 两个入口的列表、当前启用、各自的 worker 数 |
 | `POST /v1/sites/switch` | `{"site":"cn"}` 或 `{"site":"intl"}`，落盘并预热浏览器 |
-| `GET /v1/login/check?site=` | 探测任意入口的登录态，不会切换当前入口 |
+| `GET /v1/login/check?site=` | 探测任意入口的登录态（附带 `account`：手机号/邮箱/ID），不会切换当前入口 |
 
 ### 预设管理
 
@@ -350,6 +357,7 @@ Model    : deepseek-web          # 带思考：deepseek-web-think
 |---|---|---|
 | `DS_BRIDGE_PORT` | `8788` | 桥监听端口 |
 | `DS_BRIDGE_HOST` | `127.0.0.1` | 如需局域网访问改 `0.0.0.0` |
+| `DS_HEADLESS` | 空 | 设为 `1` 浏览器无头运行（不弹窗口，挂机/服务器用） |
 | `DS_BRIDGE_KEY` | 空 | 追加一个合法 key（不会覆盖文件里的） |
 | `DS_CDP_PORT` | 自动探测 | 指定已运行的调试浏览器端口 |
 | `DS_CONCURRENCY` | `2` | 并发标签页数（同一账号，别开太大） |
@@ -363,14 +371,15 @@ Model    : deepseek-web          # 带思考：deepseek-web-think
 
 ```
 ds-bridge/
-├─ start.bat              # 双击启动器
-├─ server.mjs             # HTTP 服务 + 路由 + 按入口分池 + 自愈
+├─ start.bat              # 双击启动器（桌面模式，浏览器有窗口）
+├─ start-server.bat       # 无头常驻启动器（挂机/手机/服务器，浏览器无窗口）
+├─ server.mjs             # HTTP 服务 + 路由 + 按入口分池 + 死浏览器自动重启
 ├─ config.json            # API key、入口、启用中的预设（生成物）
 ├─ lib/
-│  ├─ cdp.mjs             # 极简 CDP 客户端 + profile/端口归属判定
-│  ├─ view.mjs            # 画面镜像：截屏流 + 输入转发
+│  ├─ cdp.mjs             # 极简 CDP 客户端 + profile/端口归属判定 + 无头启动
+│  ├─ view.mjs            # （遗留）画面镜像，已不再被服务端引用
 │  ├─ sites.mjs           # 入口定义（origin/locale/profile/port）
-│  ├─ deepseek.mjs        # 会话创建 / PoW 头 / 流式完成 / 标签页自愈
+│  ├─ deepseek.mjs        # 会话创建 / PoW 头 / 流式完成 / 账号信息 / 标签页自愈
 │  ├─ stream.mjs          # DeepSeek SSE 解析（三种帧格式，页面与 Node 共用）
 │  ├─ presets.mjs         # 预设导入/存储/导出/合成
 │  ├─ config.mjs          # 配置加载 + 原子写入 + key 校验
@@ -394,7 +403,7 @@ ds-bridge/
    ├─ sites.e2e.mjs       # 入口定义 + 切换（含离线断言）
    ├─ smoke.mjs           # 接口冒烟
    ├─ e2e.mjs             # 真机端到端
-   ├─ console.e2e.mjs     # 真机：画面流 + 预设生命周期
+   ├─ console.e2e.mjs     # 真机：控制台生命周期
    └─ nsfw.e2e.mjs        # 真机：认证 + NSFW 产出
 ```
 
@@ -412,17 +421,21 @@ $t = [System.IO.File]::ReadAllText($p) -replace "`r`n","`n" -replace "`n","`r`n"
 [System.IO.File]::WriteAllBytes($p, [System.Text.Encoding]::UTF8.GetBytes($t))
 ```
 
-**画面黑着 / 一直"正在连接"** → 点「刷新画面」。若仍不行，说明画面标签页没了；重启服务会自动重建。
+**`cdp not connect` / 浏览器连接丢失** → 桥的浏览器窗口被关了。服务会自动检测死连接并重启浏览器（登录态在磁盘 profile 里，不丢），重启期间请求会断几秒。如果反复出现，看看是不是杀软在杀 Edge。
 
-**切换入口后显示未登录** → 正常。每个入口是独立 profile，第一次用国际站需要在「登录」页登录一次，之后一直保持。国内站的登录不会因此丢。
+**「打开 DeepSeek 登录窗口」没反应** → 窗口可能被最小化且置前被系统拦了。看任务栏有没有新的 Edge/Chrome 窗口；服务日志里出现 `opened in real window` 就说明标签页已打开。
+
+**切换入口后显示未登录** → 正常。每个入口是独立 profile，第一次用国际站需要登录一次，之后一直保持。国内站的登录不会因此丢。
 
 **`port 9222/9223 is held by a different browser profile`** → 那个端口被另一个 profile 的浏览器占着（多半是手动开过）。关掉它，或改 `lib/sites.mjs` 里该入口的 `cdpPort`。这个检查是有意的：不做的话第二个入口会静默复用第一个的浏览器，一个登录顶掉另一个。
 
 **`config.json is not valid JSON`** → 手改时留下 BOM 或语法错。BOM 现在会自动忽略；语法错会明确报出位置。
 
-**`not logged in`** → 在「登录」页登录一次，或用自动弹出的浏览器窗口登录。登录态存在独立 profile 里，之后长期有效。
+**`not logged in`** → 点「打开 DeepSeek 登录窗口」登录一次。登录态存在独立 profile 里，之后长期有效；浏览器重启也不丢。
 
-**`401 invalid key`** → 请求没带或带错了 `Authorization: Bearer ...`。查 `config.json` 的 `apiKeys`，或 `GET /v1/keys` 看有哪些标签。网页控制台会自动从 `/v1/console/bootstrap` 取。
+**「登录身份」显示"未取得身份"** → 已登录但 `users/current` 拉取失败（可能是 DeepSeek 改了接口）。不影响填表，只是看不到账号显示。
+
+**`401 invalid key`** → 请求没带或带错了 `Authorization: Bearer ...`。查 `config.json` 的 `apiKeys`，或 `GET /v1/keys` 看有哪些标签。本机控制台会自动从 `/v1/console/bootstrap` 取 key；手机访问时在状态页手动粘一次。
 
 **`deepseek 401`** → 网页端登录过期，重新登录；或调 `DS_CLIENT_VERSION`。
 
@@ -444,6 +457,27 @@ $t = [System.IO.File]::ReadAllText($p) -replace "`r`n","`n" -replace "`n","`r`n"
 
 ---
 
+## 手机 / 远程使用
+
+不开电脑、手机直接用，两条路：
+
+**局域网（同一 WiFi）**——电脑挂着就行：
+
+1. 桌面模式（`start.bat`）登录过 DeepSeek 一次
+2. 双击 `start-server.bat`（无头 + 开放局域网），电脑可锁屏
+3. 手机浏览器开 `http://<电脑IP>:8788/`（IP 用 `ipconfig` 查），粘一次 API key
+4. 手机上的酒馆/客户端：Base URL `http://<电脑IP>:8788/v1`
+5. 防火墙放行：`New-NetFirewallRule -DisplayName "ds-bridge" -Direction Inbound -LocalPort 8788 -Protocol TCP -Action Allow`
+
+**手机当服务器（Termux，电脑彻底不开）**——完整图文教程见 **[docs/手机使用教程.md](docs/手机使用教程.md)**。速览：
+
+1. F-Droid 装 Termux → 拉唤醒锁
+2. 传文件或在线下载，`bash termux-setup.sh` 一键装好启动
+3. 电脑的 `.ds-bridge-profile-cn` 拷到手机 `~/` = 登录态迁移，免扫码
+4. 酒馆连 `http://127.0.0.1:8788/v1`
+
+---
+
 ## 测试
 
 ```powershell
@@ -453,7 +487,7 @@ node test/presets.test.mjs   # 预设解析/存储/导出/路径安全，43 项�
 node test/sites.e2e.mjs      # 入口定义 + 切换，34 项（离线断言 + 服务在跑时测切换）
 node test/smoke.mjs          # 接口冒烟 + 认证，13 项
 node test/e2e.mjs            # 真机：普通回复 + 流式 + 批量填表
-node test/console.e2e.mjs    # 真机：画面流 + 预设生命周期，20 项
+node test/console.e2e.mjs    # 真机：控制台生命周期
 node test/nsfw.e2e.mjs       # 真机：认证拦截 + NSFW 产出
 ```
 
@@ -477,8 +511,6 @@ node test/nsfw.e2e.mjs       # 真机：认证拦截 + NSFW 产出
 - 走的是网页端会话，**同一账号有频率限制**，别把并发开大。两个入口各自独立计数。
 - DeepSeek 改接口时只需更新 `lib/stream.mjs` 的帧处理，其余不动。
 - 破限是提示词层面的，模型侧仍有概率拒绝；`presets/*.txt` 是可迭代的，实测不理想就调那两段。
-- 画面镜像走的是 JPEG 流，动画和视频会显得卡；登录和点选足够用。
-- screencast 只在画面变化时发帧，所以新开页面时会主动补一帧；页面完全静止时不会持续刷新，这省带宽也省 CPU。
-- 两个入口同时启用会开两个浏览器窗口，各占一份内存。不用国际站时不切过去就不会启动它。
-- 国际站的界面语言是通过 DeepSeek 自己的 locale 偏好设的。实测只影响显示——账号、token、历史都不变；真要换区域账号还是得用那个区域的账号登录。
-- `/v1/console/bootstrap` 只对 `127.0.0.1` 开放。若把服务绑到 `0.0.0.0` 且无 key，等于把账号交出去。
+- 桥的浏览器窗口最小化待在任务栏，别手动关整个浏览器进程——关了也能自动恢复，但断几秒。
+- 两个入口同时启用会开两个浏览器实例，各占一份内存。不用国际站时不切过去就不会启动它。
+- `/v1/console/bootstrap` 只对 `127.0.0.1` 开放。**绑到 `0.0.0.0` 时 API key 认证是唯一防线**（`start-server.bat` 会强制要求 key），公网部署务必确认 `apiKeys` 非空，或者再加一层反向代理认证。
