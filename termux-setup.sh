@@ -37,14 +37,14 @@ if [ "$1" != "--start" ]; then
   # Upgrade everything first: a half-updated system breaks dynamic linking
   # (libcurl vs libssl symbol mismatches crash git/curl with CANNOT LINK).
   pkg upgrade -y
-  pkg install -y nodejs-lts chromium
-fi
-# Sanity probe: if the linker is broken, fail here with a clear fix instead of
-# deep inside the server.
-if ! curl -sI https://127.0.0.1:1 >/dev/null 2>&1 && curl --version >/dev/null 2>&1; then :; fi
-LINK_OK=$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 https://example.com 2>/dev/null || echo LINKFAIL)
-if [ "$LINK_OK" = "LINKFAIL" ] && ! curl --version >/dev/null 2>&1; then
-  fail "curl 无法运行（动态链接库错位）。执行 pkg upgrade -y 修复后重跑本脚本"
+  pkg install -y nodejs-lts
+  # chromium lives in the x11 repo, NOT in main — "no installation candidate"
+  # without it. The gtk/X11 deps are heavy but headless mode never opens a
+  # window, so they just sit there.
+  if ! pkg list-installed 2>/dev/null | grep -q '^chromium/'; then
+    pkg install -y x11-repo
+    pkg install -y chromium
+  fi
 fi
 command -v node >/dev/null || fail "node 未装上，手动跑：pkg install nodejs-lts"
 node -e "const[m]=process.versions.node.split('.').map(Number);if(m<18)process.exit(1)" || fail "Node 版本太低（需要 18+，建议 22）。pkg install nodejs-lts 升级。"
@@ -81,9 +81,9 @@ fi
 cd "$APP_DIR"
 
 # ---------- 3. 浏览器路径 ----------
-# Termux 的 chromium 不在标准 PATH 时让 findBrowserExe 兜底，这里再保险一层。
+# Termux chromium installs to $PREFIX/bin/chromium-browser (x11 repo build).
 export DS_BROWSER="$(command -v chromium-browser || command -v chromium)"
-[ -n "$DS_BROWSER" ] || fail "chromium 没装上：pkg install chromium"
+[ -n "$DS_BROWSER" ] || fail "chromium 没装上：pkg install x11-repo && pkg install chromium"
 
 # ---------- 4. 配置 ----------
 if [ ! -f config.json ]; then
