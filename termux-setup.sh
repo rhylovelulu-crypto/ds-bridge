@@ -34,7 +34,17 @@ command -v pkg >/dev/null || fail "pkg 不可用。请从 F-Droid 安装最新�
 if [ "$1" != "--start" ]; then
   say "安装依赖：nodejs-lts chromium（首次约 200MB，耐心等）…"
   pkg update -y
+  # Upgrade everything first: a half-updated system breaks dynamic linking
+  # (libcurl vs libssl symbol mismatches crash git/curl with CANNOT LINK).
+  pkg upgrade -y
   pkg install -y nodejs-lts chromium
+fi
+# Sanity probe: if the linker is broken, fail here with a clear fix instead of
+# deep inside the server.
+if ! curl -sI https://127.0.0.1:1 >/dev/null 2>&1 && curl --version >/dev/null 2>&1; then :; fi
+LINK_OK=$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 https://example.com 2>/dev/null || echo LINKFAIL)
+if [ "$LINK_OK" = "LINKFAIL" ] && ! curl --version >/dev/null 2>&1; then
+  fail "curl 无法运行（动态链接库错位）。执行 pkg upgrade -y 修复后重跑本脚本"
 fi
 command -v node >/dev/null || fail "node 未装上，手动跑：pkg install nodejs-lts"
 node -e "const[m]=process.versions.node.split('.').map(Number);if(m<18)process.exit(1)" || fail "Node 版本太低（需要 18+，建议 22）。pkg install nodejs-lts 升级。"
