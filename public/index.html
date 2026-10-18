@@ -219,17 +219,15 @@
       <div class="row"><span>Token</span><span id="s-token">—</span></div>
       <div class="row"><span>当前页面</span><span id="s-page" style="font-size:11px">—</span></div>
       <div class="bar" style="margin-top:12px">
-        <button class="btn" id="btn-open-login">打开 DeepSeek 登录</button>
+        <button class="btn ghost" id="btn-open-login-2">打开 DeepSeek 登录</button>
         <button class="btn danger" id="btn-logout">退出登录</button>
         <button class="btn ghost" id="btn-switch-account">切换账号</button>
       </div>
       <div class="hint" style="margin-top:8px">
-        推荐点「打开 DeepSeek 登录」：会在桥自带的浏览器里直接打开登录页，你在真实窗口里完成登录，
-        不用在上面的小画面里操作。登录完回来点「检查」或等状态自动刷新。
-        切换账号 = 退出后重新登录另一个账号，配置和预设不受影响。
+        推荐 点上面大按钮「打开 DeepSeek 登录窗口」。切换账号 = 退出后重新登录另一个账号，配置和预设不受影响。
       </div>
       <div class="bar" style="margin-top:8px">
-        <button class="btn ghost" id="btn-check-login">检查登录状态</button>
+        <button class="btn ghost" id="btn-check-login-2">检查登录状态</button>
       </div>
     </div>
     <div class="card" style="grid-column: 1 / -1">
@@ -663,7 +661,9 @@ $('btn-open-login').onclick = async () => {
   try {
     const d = await api('/v1/view/open', { method: 'POST', body: { site: activeSite, url: 'https://chat.deepseek.com/sign_in' } });
     if (!d.ok) throw new Error(d.error || '打开失败');
-    toast('已在桥的浏览器窗口打开登录页，登录后回到这里检查状态');
+    toast(d.headless
+      ? '已后台创建登录标签页（无头模式没有可见窗口），若之前导入过登录态稍后自动变绿，否则请在电脑上登录后迁移 profile'
+      : '已在桥的浏览器窗口打开登录页，登录后回到这里检查状态');
     set('s-login', '等待登录…', 'warn');
     // Poll a few times so the user sees the flip to 已登录 without manual refresh.
     let tries = 0;
@@ -684,6 +684,10 @@ $('btn-open-login').onclick = async () => {
   } catch (e) { toast(e.message, true); }
 };
 $('btn-check-login').onclick = () => checkLogin();
+// Duplicate buttons in the status card share the same behavior.
+const openLoginHandler = () => $('btn-open-login').click();
+$('btn-open-login-2').onclick = openLoginHandler;
+$('btn-check-login-2').onclick = () => checkLogin();
 
 // Copy the firewall rule command from the phone guide.
 $('btn-copy-fw').onclick = async () => {
