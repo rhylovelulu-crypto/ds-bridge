@@ -476,6 +476,13 @@ $t = [System.IO.File]::ReadAllText($p) -replace "`r`n","`n" -replace "`n","`r`n"
 3. 电脑的 `.ds-bridge-profile-cn` 拷到手机 `~/` = 登录态迁移，免扫码
 4. 酒馆连 `http://127.0.0.1:8788/v1`
 
+**云服务器（任何网络任何设备）**——完整教程见 **[docs/服务器部署教程.md](docs/服务器部署教程.md)**。速览：
+
+1. 最低配云服务器装 Node 22 + Chromium
+2. clone 项目，`init-config` 生成 Key，迁移 `.ds-bridge-profile-cn` 登录态
+3. systemd 常驻 + 安全组放行 8788，酒馆连 `http://服务器IP:8788/v1`
+4. 可选：Caddy 上 HTTPS + 自定义域名
+
 ---
 
 ## 测试
