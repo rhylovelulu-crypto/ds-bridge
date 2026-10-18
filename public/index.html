@@ -92,41 +92,7 @@
   label.field > span { display: block; font-size: 12px; color: var(--dim); margin-bottom: 5px; }
   .bar { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
 
-  /* ---- mobile adaptation ---- */
-  /* Phones: stack the header into two rows, shrink touch targets sensibly,
-     and keep every flex row wrappable. Desktop layout is untouched above
-     this breakpoint; everything below only applies under 720px. */
-  @media (max-width: 720px) {
-    header {
-      height: auto; flex-wrap: wrap; padding: 8px 12px;
-      gap: 8px; row-gap: 4px;
-    }
-    .brand { font-size: 14px; }
-    .brand small { display: none; }           /* tagline wastes space on phone */
-    nav { width: 100%; order: 3; margin-left: 0; gap: 2px; }
-    nav button { flex: 1; padding: 8px 4px; font-size: 12.5px; text-align: center; }
-    .headright { margin-left: auto; gap: 8px; }
-    .seg button { padding: 4px 8px; font-size: 11px; }
-
-    main { padding: 12px 12px 32px; }
-    .card { padding: 12px 12px; border-radius: 8px; }
-    .g2 { grid-template-columns: 1fr; }       /* force single column on phone */
-    .g3 { grid-template-columns: 1fr; }
-    .bar { gap: 7px; }
-    .bar .hint { width: 100%; }               /* hint text drops to its own line */
-    button.btn, a.btn { padding: 10px 14px; font-size: 13.5px; }  /* bigger touch targets */
-    .row { font-size: 12.5px; gap: 8px; }
-    input[type=text], textarea { font-size: 16px; }  /* >=16px stops iOS zoom-on-focus */
-
-    .step { padding: 9px 10px; }
-    .steps code, .step code { word-break: break-all; }
-    code.copyable { display: block; white-space: pre-wrap; }
-
-    .pitem { flex-wrap: wrap; }
-    .pitem .pact { margin-left: 0; width: 100%; justify-content: flex-end; }
-
-    pre { max-height: 240px; font-size: 11.5px; }
-  }
+  /* ---- live view ---- */
   .viewwrap {
     background: #05070a; border: 1px solid var(--line); border-radius: 10px;
     overflow: hidden; position: relative; min-height: 300px;
@@ -163,6 +129,42 @@
   .pitem .pact { margin-left: auto; display: flex; gap: 6px; }
   .pitem button { padding: 5px 11px; font-size: 12px; border-radius: 6px; }
 
+  /* ---- mobile adaptation ---- */
+  /* Phones: stack the header into two rows, shrink touch targets sensibly,
+     and keep every flex row wrappable. Desktop layout is untouched above
+     this breakpoint; everything below only applies under 720px. */
+  @media (max-width: 720px) {
+    header {
+      height: auto; flex-wrap: wrap; padding: 8px 12px;
+      gap: 8px; row-gap: 4px;
+    }
+    .brand { font-size: 14px; }
+    .brand small { display: none; }
+    nav { width: 100%; order: 3; margin-left: 0; gap: 2px; }
+    nav button { flex: 1; padding: 8px 4px; font-size: 12.5px; text-align: center; }
+    .headright { margin-left: auto; gap: 8px; }
+    .seg button { padding: 4px 8px; font-size: 11px; }
+
+    main { padding: 12px 12px 32px; }
+    .card { padding: 12px 12px; border-radius: 8px; }
+    .g2 { grid-template-columns: 1fr; }
+    .g3 { grid-template-columns: 1fr; }
+    .bar { gap: 7px; }
+    .bar .hint { width: 100%; }
+    button.btn, a.btn { padding: 10px 14px; font-size: 13.5px; }
+    .row { font-size: 12.5px; gap: 8px; }
+    input[type=text], textarea { font-size: 16px; }
+
+    .step { padding: 9px 10px; }
+    .steps code, .step code { word-break: break-all; }
+    code.copyable { display: block; white-space: pre-wrap; }
+
+    .pitem { flex-wrap: wrap; }
+    .pitem .pact { margin-left: 0; width: 100%; justify-content: flex-end; }
+
+    pre { max-height: 240px; font-size: 11.5px; }
+  }
+
   .drop {
     border: 1.5px dashed var(--line); border-radius: 10px; padding: 30px 20px;
     text-align: center; color: var(--dim); font-size: 13px; transition: .15s;
@@ -192,7 +194,7 @@
   .toast.on { opacity: 1; }
   .toast.err { border-color: #7f2c2c; color: #fca5a5; }
 
-  /* numbered guide steps (鎵嬫満/灞€鍩熺綉浣跨敤鎸囧崡) */
+  /* numbered guide steps (手机/局域网使用指南) */
   .steps { display: flex; flex-direction: column; gap: 10px; }
   .step {
     display: flex; gap: 12px; align-items: flex-start;
@@ -214,289 +216,303 @@
 <body>
 
 <header>
-  <div class="brand">DS Bridge <small>DeepSeek 缃戦〉绔?鈫?OpenAI 鍏煎</small></div>
+  <div class="brand">DS Bridge <small>DeepSeek 网页端 → OpenAI 兼容</small></div>
   <nav>
-    <button data-page="login" class="on">鐧诲綍</button>
-    <button data-page="presets">棰勮</button>
-    <button data-page="test">娴嬭瘯</button>
-    <button data-page="status">鐘舵€?/button>
+    <button data-page="login" class="on">登录</button>
+    <button data-page="presets">预设</button>
+    <button data-page="test">测试</button>
+    <button data-page="status">状态</button>
   </nav>
   <div class="headright">
-    <div class="seg" id="site-seg" title="閫夋嫨 DeepSeek 鍏ュ彛"></div>
-    <span><span class="dot" id="dot"></span><span id="h-conn">杩炴帴涓?/span></span>
-    <span id="h-model">鈥?/span>
+    <div class="seg" id="site-seg" title="选择 DeepSeek 入口"></div>
+    <span><span class="dot" id="dot"></span><span id="h-conn">连接中</span></span>
+    <span id="h-model">—</span>
   </div>
 </header>
 
 <main>
 
-<!-- ============ 鐧诲綍 ============ -->
+<!-- ============ 登录 ============ -->
 <section class="page on" id="page-login">
   <div class="card" style="margin-bottom:14px">
     <div class="bar" style="margin-bottom:6px">
-      <strong style="font-size:15px">鐧诲綍 DeepSeek</strong>
+      <strong style="font-size:15px">登录 DeepSeek</strong>
       <span style="margin-left:auto"></span>
       <span id="v-status" class="hint"></span>
     </div>
     <div class="bar" style="margin-top:10px">
-      <a class="btn" id="btn-open-login" style="text-decoration:none;display:inline-block" href="https://chat.deepseek.com/sign_in" target="_blank">鎵撳紑 DeepSeek 鐧诲綍</a>
-      <button class="btn ghost" id="btn-check-login">妫€鏌ョ櫥褰曠姸鎬?/button>
+      <a class="btn" id="btn-open-login" style="text-decoration:none;display:inline-block" href="https://chat.deepseek.com/sign_in" target="_blank">打开 DeepSeek 登录</a>
+      <button class="btn ghost" id="btn-check-login">检查登录状态</button>
     </div>
     <div class="bar" style="margin-top:10px">
-      <input type="text" id="manual-token" placeholder="鐧诲綍鍚庯細娴忚鍣ㄥ湴鍧€鏍忚緭鍏?javascript: 浼氳鎷︼紝鏀圭敤鎵嬫満娴忚鍣ㄧ殑銆屾煡鐪嬬綉椤垫簮浠ｇ爜銆嶆垨涔︾灏忓伐鍏锋姄 userToken锛岀矘璐村埌杩欓噷" style="flex:1;min-width:220px;font-size:12px" />
-      <button class="btn ghost" id="btn-paste-token">娉ㄥ叆鐧诲綍鎬?/button>
+      <input type="text" id="manual-token" placeholder="登录后：浏览器地址栏输入 javascript: 会被拦，改用手机浏览器的「查看网页源代码」或书签小工具抓 userToken，粘贴到这里" style="flex:1;min-width:220px;font-size:12px" />
+      <button class="btn ghost" id="btn-paste-token">注入登录态</button>
     </div>
     <details style="margin-top:8px">
-      <summary class="hint" style="cursor:pointer">鎵嬫満涓婃€庝箞鎶?userToken锛燂紙鐐瑰紑鐪嬫楠わ級</summary>
+      <summary class="hint" style="cursor:pointer">手机上怎么抓 userToken？（点开看步骤）</summary>
       <div class="hint" style="margin-top:6px;padding:10px;background:var(--panel2);border-radius:8px">
-        1. 鐐逛笂闈€屾墦寮€ DeepSeek 鐧诲綍銆嶁啋 绯荤粺娴忚鍣ㄦ墦寮€鐧诲綍椤?鈫?鐧诲綍鎴愬姛锛岀湅鍒拌亰澶╃晫闈?br />
-        2. 鍦ㄧ櫥褰曞悗鐨勯〉闈紝<b>澶嶅埗涓嬮潰杩欐浠ｇ爜</b>锛岀劧鍚庯細<br />
-        &nbsp;&nbsp;鈥?Chrome锛氬湴鍧€鏍忚緭 <code>javascript:</code> 浼氳嚜鍔ㄥ垹鎺夛紝鎵€浠ュ厛鎶婁唬鐮佸鍒跺叏锛屽湪鍦板潃鏍忓厛鎵?<code>j</code> 鍐嶇矘璐村叾浣欓儴鍒嗭紱鎴栬€呯敤銆屼功绛俱€嶆柟寮忥細鏂板缓涔︾锛岀綉鍧€绮樿创鏁存浠ｇ爜锛岀櫥褰曞悗鎵撳紑璇ヤ功绛?br />
-        &nbsp;&nbsp;鈥?鏇寸畝鍗曪細瑁呬釜銆?View Source)銆嶇被灏忓簲鐢紝鎴栫敤 Via 娴忚鍣紙鑷甫缃戦〉婧愮爜鏌ョ湅锛?br />
-        3. 浠ｇ爜锛堥€変腑澶嶅埗锛夛細<br />
-        <code class="copyable" id="token-snippet">javascript:(function(){var r=localStorage.getItem('userToken');var t=r?JSON.parse(r).value:'';if(t){prompt('浣犵殑 userToken锛岄暱鎸夊叏閫夊鍒讹細',t);}else{alert('鏈櫥褰曟垨鎶撲笉鍒?token');}})();</code>
-        <button class="btn ghost" id="btn-copy-snippet" style="padding:4px 10px;font-size:11px">澶嶅埗浠ｇ爜</button><br />
-        4. 鎵ц鍚庡脊绐楁樉绀?token 鈫?闀挎寜澶嶅埗 鈫?绮樿创鍒颁笂闈㈢殑杈撳叆妗?鈫?鐐广€屾敞鍏ョ櫥褰曟€併€?br />
-        5. 鐐广€屾鏌ョ櫥褰曠姸鎬併€嶅彉缁垮嵆瀹屾垚銆倀oken 闀挎湡鏈夋晥锛屾敞鍏ヤ竴娆″嵆鍙?      </div>
+        1. 点上面「打开 DeepSeek 登录」→ 系统浏览器打开登录页 → 登录成功，看到聊天界面<br />
+        2. 在登录后的页面，<b>复制下面这段代码</b>，然后：<br />
+        &nbsp;&nbsp;• Chrome：地址栏输 <code>javascript:</code> 会自动删掉，所以先把代码复制全，在地址栏先打 <code>j</code> 再粘贴其余部分；或者用「书签」方式：新建书签，网址粘贴整段代码，登录后打开该书签<br />
+        &nbsp;&nbsp;• 更简单：装个「(View Source)」类小应用，或用 Via 浏览器（自带网页源码查看）<br />
+        3. 代码（选中复制）：<br />
+        <code class="copyable" id="token-snippet">javascript:(function(){var r=localStorage.getItem('userToken');var t=r?JSON.parse(r).value:'';if(t){prompt('你的 userToken，长按全选复制：',t);}else{alert('未登录或抓不到 token');}})();</code>
+        <button class="btn ghost" id="btn-copy-snippet" style="padding:4px 10px;font-size:11px">复制代码</button><br />
+        4. 执行后弹窗显示 token → 长按复制 → 粘贴到上面的输入框 → 点「注入登录态」<br />
+        5. 点「检查登录状态」变绿即完成。token 长期有效，注入一次即可
+      </div>
     </details>
   </div>
 
   <div class="grid g3">
     <div class="card">
-      <h2>鐧诲綍鐘舵€?/h2>
-      <div class="row"><span>DeepSeek 璐﹀彿</span><span id="s-login">鏈鏌?/span></div>
-      <div class="row"><span>鐧诲綍韬唤</span><span id="s-account">鈥?/span></div>
-      <div class="row"><span>Token</span><span id="s-token">鈥?/span></div>
-      <div class="row"><span>褰撳墠椤甸潰</span><span id="s-page" style="font-size:11px">鈥?/span></div>
+      <h2>登录状态</h2>
+      <div class="row"><span>DeepSeek 账号</span><span id="s-login">未检查</span></div>
+      <div class="row"><span>登录身份</span><span id="s-account">—</span></div>
+      <div class="row"><span>Token</span><span id="s-token">—</span></div>
+      <div class="row"><span>当前页面</span><span id="s-page" style="font-size:11px">—</span></div>
       <div class="bar" style="margin-top:12px">
-        <button class="btn ghost" id="btn-open-login-2">鎵撳紑 DeepSeek 鐧诲綍</button>
-        <button class="btn danger" id="btn-logout">閫€鍑虹櫥褰?/button>
-        <button class="btn ghost" id="btn-switch-account">鍒囨崲璐﹀彿</button>
+        <button class="btn ghost" id="btn-open-login-2">打开 DeepSeek 登录</button>
+        <button class="btn danger" id="btn-logout">退出登录</button>
+        <button class="btn ghost" id="btn-switch-account">切换账号</button>
       </div>
       <div class="hint" style="margin-top:8px">
-        鎺ㄨ崘 鐐逛笂闈㈠ぇ鎸夐挳銆屾墦寮€ DeepSeek 鐧诲綍绐楀彛銆嶃€傚垏鎹㈣处鍙?= 閫€鍑哄悗閲嶆柊鐧诲綍鍙︿竴涓处鍙凤紝閰嶇疆鍜岄璁句笉鍙楀奖鍝嶃€?      </div>
+        推荐 点上面大按钮「打开 DeepSeek 登录窗口」。切换账号 = 退出后重新登录另一个账号，配置和预设不受影响。
+      </div>
       <div class="bar" style="margin-top:8px">
-        <button class="btn ghost" id="btn-check-login-2">妫€鏌ョ櫥褰曠姸鎬?/button>
+        <button class="btn ghost" id="btn-check-login-2">检查登录状态</button>
       </div>
     </div>
     <div class="card" style="grid-column: 1 / -1">
-      <h2>鎵嬫満 / 灞€鍩熺綉浣跨敤鎸囧崡</h2>
+      <h2>手机 / 局域网使用指南</h2>
       <div class="hint" style="margin-bottom:10px">
-        鎯冲湪鎵嬫満涓婄敤杩欎釜妗ャ€佷笉鐢ㄤ竴鐩村畧鐫€鐢佃剳锛熸寜涓嬮潰浜旀璧般€傚墠鎻愶細鎵嬫満鍜岃繖鍙扮數鑴戣繛鐨勬槸<b>鍚屼竴涓?WiFi</b>銆?      </div>
+        想在手机上用这个桥、不用一直守着电脑？按下面五步走。前提：手机和这台电脑连的是<b>同一个 WiFi</b>。
+      </div>
       <div class="steps">
         <div class="step">
           <div class="stepn">1</div>
-          <div>鍦ㄧ數鑴戜笂鐢ㄦ闈㈡ā寮忥紙<code>start.bat</code>锛夌櫥褰曡繃 DeepSeek 涓€娆°€傚凡缁忕櫥褰曡繃灏辫烦杩囪繖姝ャ€?/div>
+          <div>在电脑上用桌面模式（<code>start.bat</code>）登录过 DeepSeek 一次。已经登录过就跳过这步。</div>
         </div>
         <div class="step">
           <div class="stepn">2</div>
-          <div>鍙屽嚮椤圭洰鐩綍閲岀殑 <code>start-server.bat</code> 鈥斺€?娴忚鍣ㄦ棤澶磋繍琛岋紙涓嶅脊浠讳綍绐楀彛锛夛紝鏈嶅姟寮€鏀剧粰灞€鍩熺綉銆備箣鍚庣數鑴戝彲浠ラ攣灞忔垨鏈€灏忓寲锛屾湇鍔＄収甯歌窇銆?/div>
+          <div>双击项目目录里的 <code>start-server.bat</code> —— 浏览器无头运行（不弹任何窗口），服务开放给局域网。之后电脑可以锁屏或最小化，服务照常跑。</div>
         </div>
         <div class="step">
           <div class="stepn">3</div>
-          <div>鎵嬫満娴忚鍣ㄦ墦寮€ <code id="lan-url">http://&lt;鐢佃剳IP&gt;:8788/</code>锛堜笅闈㈠凡鑷姩濉ソ鏈満鍦板潃锛夛紝鍦ㄣ€岀姸鎬併€嶉〉鎶?API Key 绮樿繘杈撳叆妗?鈥斺€?鍙渶绮樹竴娆★紝鎵嬫満娴忚鍣ㄤ細璁颁綇銆?/div>
+          <div>手机浏览器打开 <code id="lan-url">http://&lt;电脑IP&gt;:8788/</code>（下面已自动填好本机地址），在「状态」页把 API Key 粘进输入框 —— 只需粘一次，手机浏览器会记住。</div>
         </div>
         <div class="step">
           <div class="stepn">4</div>
-          <div>鎵嬫満涓婄殑閰掗/瀹㈡埛绔繖鏍峰～锛?br />
-            Base URL锛?code id="lan-base">http://&lt;鐢佃剳IP&gt;:8788/v1</code><br />
-            API Key锛歝onfig.json 閲岀殑 <code>sk-dsb-...</code><br />
-            妯″瀷锛?code>deepseek-web</code>锛堝甫鎬濊€冪敤 <code>deepseek-web-think</code>锛?/div>
+          <div>手机上的酒馆/客户端这样填：<br />
+            Base URL：<code id="lan-base">http://&lt;电脑IP&gt;:8788/v1</code><br />
+            API Key：config.json 里的 <code>sk-dsb-...</code><br />
+            模型：<code>deepseek-web</code>（带思考用 <code>deepseek-web-think</code>）</div>
         </div>
         <div class="step">
           <div class="stepn">5</div>
-          <div>绗竴娆¤繛鎺ュ鏋滃け璐ワ紝鏄?Windows 闃茬伀澧欐嫤浜嗐€傚湪鐢佃剳涓婁互绠＄悊鍛樿韩浠借繍琛屼竴娆★細<br />
+          <div>第一次连接如果失败，是 Windows 防火墙拦了。在电脑上以管理员身份运行一次：<br />
             <code class="copyable" id="fw-cmd">New-NetFirewallRule -DisplayName "ds-bridge" -Direction Inbound -LocalPort 8788 -Protocol TCP -Action Allow</code>
-            <button class="btn ghost" id="btn-copy-fw" style="padding:4px 10px;font-size:11px">澶嶅埗鍛戒护</button></div>
+            <button class="btn ghost" id="btn-copy-fw" style="padding:4px 10px;font-size:11px">复制命令</button></div>
         </div>
       </div>
       <div class="bar" style="margin-top:12px">
-        <span class="hint">鏈満灞€鍩熺綉鍦板潃锛?/span>
-        <code id="lan-ip" style="color:var(--ok)">妫€娴嬩腑鈥?/code>
-        <span class="hint">锛堟墜鏈烘墦涓嶅紑鏃朵紭鍏堟鏌ワ細鎵嬫満杩炵殑鏄笉鏄繖涓?WiFi銆侀槻鐏鏄惁鏀捐锛?/span>
+        <span class="hint">本机局域网地址：</span>
+        <code id="lan-ip" style="color:var(--ok)">检测中…</code>
+        <span class="hint">（手机打不开时优先检查：手机连的是不是这个 WiFi、防火墙是否放行）</span>
       </div>
       <div class="hint" style="margin-top:8px">
-        鎯冲畬鍏ㄤ笉寮€鐢佃剳锛熸妸鏁翠釜鐩綍鎷峰埌鏃х數鑴?/ NAS / 浜戞湇鍔″櫒锛岃 Node 22+锛岃 <code>DS_HEADLESS=1</code> 鍜?        <code>DS_BRIDGE_HOST=0.0.0.0</code> 璺?<code>node server.mjs</code>銆傜櫥褰曟€佽縼绉伙細鎶婄敤鎴风洰褰曚笅鐨?        <code>.ds-bridge-profile-cn</code>锛堝拰 intl锛夋暣涓嫹杩囧幓鍗冲彲锛屼笉鐢ㄩ噸鏂扮櫥褰曘€?      </div>
+        想完全不开电脑？把整个目录拷到旧电脑 / NAS / 云服务器，装 Node 22+，设 <code>DS_HEADLESS=1</code> 和
+        <code>DS_BRIDGE_HOST=0.0.0.0</code> 跑 <code>node server.mjs</code>。登录态迁移：把用户目录下的
+        <code>.ds-bridge-profile-cn</code>（和 intl）整个拷过去即可，不用重新登录。
+      </div>
       <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--line)">
-        <h2 style="margin-bottom:8px">鎵嬫満褰撴湇鍔″櫒锛圱ermux / Android锛?/h2>
+        <h2 style="margin-bottom:8px">手机当服务器（Termux / Android）</h2>
         <div class="hint" style="margin-bottom:8px">
-          璁╂墜鏈烘湰韬氨鏄湇鍔″櫒锛歍ermux 閲岃窇 Node + Chromium锛岄厭棣嗚繛鎵嬫満鏈満 <code>127.0.0.1:8788</code>锛岀數鑴戝彲浠ュ交搴曞叧鎺夈€?        </div>
+          让手机本身就是服务器：Termux 里跑 Node + Chromium，酒馆连手机本机 <code>127.0.0.1:8788</code>，电脑可以彻底关掉。
+        </div>
         <div class="steps">
           <div class="step">
             <div class="stepn">1</div>
             <div>
-              鎵嬫満瑁?<b>Termux</b>銆傚畠灏辨槸涓€涓櫘閫氬畨鍗撳簲鐢紝涓嶉渶瑕佸簲鐢ㄥ晢搴楋細<br />
-              鈶?鎵嬫満娴忚鍣ㄦ墦寮€ <a href="https://f-droid.org/packages/com.termux/" target="_blank" style="color:var(--accent)">https://f-droid.org/packages/com.termux/</a><br />
-              鈶?寰€涓嬫粦锛岀偣銆孌ownload APK銆嶏紝涓嬭浇鍚庣偣寮€瀹夎锛堝脊"鏈煡鏉ユ簮"鎻愮ず灏遍€夊厑璁革級<br />
-              鈶?<b>娉ㄦ剰鍒閿?/b>锛欸oogle Play 鍜?GitHub 涓婄殑鐗堟湰閮藉凡鍋滄洿锛岃鍑?F-Droid
+              手机装 <b>Termux</b>。它就是一个普通安卓应用，不需要应用商店：<br />
+              ① 手机浏览器打开 <a href="https://f-droid.org/packages/com.termux/" target="_blank" style="color:var(--accent)">https://f-droid.org/packages/com.termux/</a><br />
+              ② 往下滑，点「Download APK」，下载后点开安装（弹"未知来源"提示就选允许）<br />
+              ③ <b>注意别装错</b>：Google Play 和 GitHub 上的版本都已停更，认准 F-Droid
             </div>
           </div>
           <div class="step">
             <div class="stepn">2</div>
             <div>
-              鎶婇」鐩枃浠朵紶鍒版墜鏈恒€傛斁鍦ㄥ摢閮借锛岃浣忎綅缃嵆鍙細<br />
-              A. 鐢佃剳涓婃妸 <code>ds-bridge</code> 鏁翠釜鏂囦欢澶圭敤寰俊/QQ/鏁版嵁绾夸紶鍒版墜鏈恒€傚井淇″瓨鐨勫湪 <code>/sdcard/Download/寰俊/</code> 鎴?<code>/sdcard/Pictures/WeiXin/</code>锛孮Q 鍦?<code>/sdcard/Download/QQ/</code>锛屾暟鎹嚎鏀惧摢鏄摢鈥斺€斾笉纭畾灏辨墦寮€鎵嬫満銆屾枃浠剁鐞嗐€岮pp 鎼?<code>ds-bridge</code><br />
-              B. Termux 閲岀洿鎺ヨ仈缃戜笅杞斤紙涓嶄緷璧栦紶杈擄紝鏀惧摢閮藉浐瀹氾級锛?code>pkg install curl -y</code> 鐒跺悗
+              把项目文件传到手机。放在哪都行，记住位置即可：<br />
+              A. 电脑上把 <code>ds-bridge</code> 整个文件夹用微信/QQ/数据线传到手机。微信存的在 <code>/sdcard/Download/微信/</code> 或 <code>/sdcard/Pictures/WeiXin/</code>，QQ 在 <code>/sdcard/Download/QQ/</code>，数据线放哪是哪——不确定就打开手机「文件管理」App 搜 <code>ds-bridge</code><br />
+              B. Termux 里直接联网下载（不依赖传输，放哪都固定）：<code>pkg install curl -y</code> 然后
               <code class="copyable">curl -L https://gh-proxy.com/https://github.com/misa1ink/ds-bridge/archive/refs/heads/main.tar.gz | tar -xz</code>
-              锛堜細瑙ｅ帇鍑?<code>ds-bridge-main</code> 鏂囦欢澶癸紝璺緞灏辨槸 <code>~/ds-bridge-main</code>锛?            </div>
+              （会解压出 <code>ds-bridge-main</code> 文件夹，路径就是 <code>~/ds-bridge-main</code>）
+            </div>
           </div>
           <div class="step">
             <div class="stepn">3</div>
-            <div>鎵撳紑 Termux锛屽厛鎷夊敜閱掗攣闃叉潃鍚庡彴锛氫笅鎷夐€氱煡鏍?鈫?Termux 閫氱煡 鈫?<b>Acquire wakelock</b>銆傜劧鍚庝竴鏉″懡浠ゅ畨瑁呭惎鍔ㄢ€斺€?b>鏂囦欢鏀惧摢閮芥棤鎵€璋擄紝璺緞鐓т綘瀹為檯浣嶇疆鍐欏嵆鍙?/b>锛屼唬鐮佷細鑷姩瑁呭埌 <code>~/ds-bridge</code>锛?br />
+            <div>打开 Termux，先拉唤醒锁防杀后台：下拉通知栏 → Termux 通知 → <b>Acquire wakelock</b>。然后一条命令安装启动——<b>文件放哪都无所谓，路径照你实际位置写即可</b>，代码会自动装到 <code>~/ds-bridge</code>：<br />
               <code class="copyable" id="termux-cmd">bash /sdcard/Download/ds-bridge/termux-setup.sh</code>
-              <button class="btn ghost" id="btn-copy-termux" style="padding:4px 10px;font-size:11px">澶嶅埗鍛戒护</button><br />
-              <b>璺緞鎬庝箞鍐欓兘涓嶅奖鍝嶇粨鏋?/b>锛氳剼鏈棤璁轰粠鍝繍琛岋紝閮芥妸浠ｇ爜瑁呭埌鍥哄畾浣嶇疆 <code>~/ds-bridge</code>锛屼互鍚庨噸鍚彧鐢?<code>bash ~/ds-bridge/termux-setup.sh --start</code>锛屽拰鍘熸枃浠跺す杩樺湪涓嶅湪鏃犲叧銆?br />
-              <b>瀹屽叏涓嶆兂绠¤矾寰勶紵</b>璺宠繃浼犺緭锛孴ermux 閲岀洿鎺ュ湪绾胯锛堜袱鏉″懡浠わ級锛?br />
+              <button class="btn ghost" id="btn-copy-termux" style="padding:4px 10px;font-size:11px">复制命令</button><br />
+              <b>路径怎么写都不影响结果</b>：脚本无论从哪运行，都把代码装到固定位置 <code>~/ds-bridge</code>，以后重启只用 <code>bash ~/ds-bridge/termux-setup.sh --start</code>，和原文件夹还在不在无关。<br />
+              <b>完全不想管路径？</b>跳过传输，Termux 里直接在线装（两条命令）：<br />
               <code class="copyable">pkg install curl -y</code><br />
               <code class="copyable">curl -L https://gh-proxy.com/https://github.com/misa1ink/ds-bridge/archive/refs/heads/main.tar.gz | tar -xz &amp;&amp; bash ~/ds-bridge-main/termux-setup.sh</code><br />
-              <b>鎵句笉鍒版枃浠跺す锛?/b><code>find /sdcard -maxdepth 3 -name termux-setup.sh 2>/dev/null</code> 鎼滃嚭鐪熷疄璺緞鍐?bash銆?br />
-              濡傛灉鎻愮ず銆孭ermission denied銆嶈闂?/sdcard锛屽厛鎵ц <code>termux-setup-storage</code> 骞跺厑璁告枃浠舵潈闄愩€?/div>
+              <b>找不到文件夹？</b><code>find /sdcard -maxdepth 3 -name termux-setup.sh 2>/dev/null</code> 搜出真实路径再 bash。<br />
+              如果提示「Permission denied」访问 /sdcard，先执行 <code>termux-setup-storage</code> 并允许文件权限。</div>
           </div>
           <div class="step">
             <div class="stepn">4</div>
-            <div>鍚姩鎴愬姛鍚庯紙灞忓箷鏄剧ず鏈嶅姟鍦板潃锛夛紝鎵嬫満娴忚鍣ㄦ墦寮€ <code>http://127.0.0.1:8788/</code>锛屻€岀姸鎬併€嶉〉澶嶅埗 API Key銆傞厭棣?瀹㈡埛绔噷锛?br />
-              Base URL锛?code>http://127.0.0.1:8788/v1</code> 路 妯″瀷锛?code>deepseek-web</code></div>
+            <div>启动成功后（屏幕显示服务地址），手机浏览器打开 <code>http://127.0.0.1:8788/</code>，「状态」页复制 API Key。酒馆/客户端里：<br />
+              Base URL：<code>http://127.0.0.1:8788/v1</code> · 模型：<code>deepseek-web</code></div>
           </div>
           <div class="step">
             <div class="stepn">5</div>
-            <div><b>鐧诲綍 DeepSeek</b>锛堜笁閫変竴锛屾帹鑽?A锛夛細<br />
-              A. <b>鐢ㄧ數鑴戠殑鐧诲綍鎬?/b>锛氱數鑴戝凡鐧诲綍杩囩殑璇濓紝鎶婄數鑴戠敤鎴风洰褰曪紙<code>C:\Users\浣犵殑鐢ㄦ埛鍚峔</code>锛変笅鐨?<code>.ds-bridge-profile-cn</code> 鏂囦欢澶逛紶鍒版墜鏈猴紙鍚屾牱鏀惧摢閮借锛屾瘮濡備笅杞界洰褰曪級锛孴ermux 閲屾墽琛?<code>termux-setup-storage</code> 鍚庯紙鍋囪鏀惧湪涓嬭浇鐩綍锛夛細<code>cp -r /sdcard/Download/.ds-bridge-profile-cn ~/</code>鈥斺€旀斁鍒殑浣嶇疆灏辨妸璺緞鎹㈡帀锛涙壘涓嶅埌灏卞湪鎵嬫満鏂囦欢绠＄悊閲岀‘璁ゅ疄闄呬綅缃啀鏀硅矾寰勩€傞噸鍚剼鏈嵆宸茬櫥褰?br />
-              B. 鎺у埗鍙扮偣銆屾墦寮€ DeepSeek 鐧诲綍绐楀彛銆嶏細鏃犲ご妯″紡鍚庡彴寤虹櫥褰曟爣绛鹃〉锛岀敾闈㈢湅涓嶅埌锛屾墽琛屽悗绛?1 鍒嗛挓鍐嶇偣銆屾鏌ョ櫥褰曠姸鎬併€嶏紝鑻ヤ綘鍦ㄨ娴忚鍣?profile 涓婃浘缁忕櫥褰曡繃鍗充細鍙樼豢<br />
-              C. 姣忔閮借鍦ㄦ墜鏈轰笂閲嶆柊鎵爜鐨勮瘽锛屼綋楠岃緝宸紝涓嶆帹鑽?/div>
+            <div><b>登录 DeepSeek</b>（三选一，推荐 A）：<br />
+              A. <b>用电脑的登录态</b>：电脑已登录过的话，把电脑用户目录（<code>C:\Users\你的用户名\</code>）下的 <code>.ds-bridge-profile-cn</code> 文件夹传到手机（同样放哪都行，比如下载目录），Termux 里执行 <code>termux-setup-storage</code> 后（假设放在下载目录）：<code>cp -r /sdcard/Download/.ds-bridge-profile-cn ~/</code>——放别的位置就把路径换掉；找不到就在手机文件管理里确认实际位置再改路径。重启脚本即已登录<br />
+              B. 控制台点「打开 DeepSeek 登录窗口」：无头模式后台建登录标签页，画面看不到，执行后等 1 分钟再点「检查登录状态」，若你在该浏览器 profile 上曾经登录过即会变绿<br />
+              C. 每次都要在手机上重新扫码的话，体验较差，不推荐</div>
           </div>
         </div>
         <div class="hint" style="margin-top:10px">
-          甯歌闂锛氬悗鍙拌鏉€ 鈫?姣忔鍚姩鍓嶆媺 wakelock锛屾垨鍦ㄧ郴缁熻缃噷缁?Termux 鍏虫帀鐢垫睜浼樺寲锛?          chromium 鎵撲笉寮€ 鈫?Termux 涓婂繀椤荤敤 <code>pkg install chromium</code> 瑁呯殑鐗堟湰锛屼笉鑳界敤瀹夊崜鐗?Chrome锛?          灞€鍩熺綉璁块棶 鈫?鎵嬫満鍜屽埆鐨勮澶囧悓涓€ WiFi锛屽湴鍧€鏄墜鏈虹殑灞€鍩熺綉 IP:8788锛?          蹇樹簡閲嶅惎鍛戒护 鈫?姘歌繙鏄?<code>bash ~/ds-bridge/termux-setup.sh --start</code>銆?        </div>
+          常见问题：后台被杀 → 每次启动前拉 wakelock，或在系统设置里给 Termux 关掉电池优化；
+          chromium 打不开 → Termux 上必须用 <code>pkg install chromium</code> 装的版本，不能用安卓版 Chrome；
+          局域网访问 → 手机和别的设备同一 WiFi，地址是手机的局域网 IP:8788；
+          忘了重启命令 → 永远是 <code>bash ~/ds-bridge/termux-setup.sh --start</code>。
+        </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ============ 棰勮 ============ -->
+<!-- ============ 预设 ============ -->
 <section class="page" id="page-presets">
   <div class="grid g2" style="margin-bottom:14px">
     <div class="card">
-      <h2>瀵煎叆棰勮</h2>
+      <h2>导入预设</h2>
       <div class="drop" id="drop">
-        鎶婃枃浠舵嫋鍒拌繖閲岋紝鎴栫偣鍑婚€夋嫨<br />
-        <span class="hint">鏀寔閰掗 Chat Completion 棰勮 .json銆佺函鏂囨湰鐮撮檺 .txt</span>
+        把文件拖到这里，或点击选择<br />
+        <span class="hint">支持酒馆 Chat Completion 预设 .json、纯文本破限 .txt</span>
       </div>
       <input type="file" id="file" accept=".json,.txt" style="display:none" />
       <label class="field" style="margin-top:14px">
-        <span>鎴栬€呯洿鎺ョ矘璐村唴瀹?/span>
-        <textarea id="paste" placeholder="绮樿创閰掗棰勮 JSON锛屾垨涓€娈电牬闄愭彁绀鸿瘝鈥?></textarea>
+        <span>或者直接粘贴内容</span>
+        <textarea id="paste" placeholder="粘贴酒馆预设 JSON，或一段破限提示词…"></textarea>
       </label>
       <div class="bar">
-        <input type="text" id="pname" placeholder="棰勮鍚嶏紙鐣欑┖鑷姩鍙栵級" style="flex:1;min-width:160px" />
-        <button class="btn" id="btn-import">瀵煎叆骞跺惎鐢?/button>
+        <input type="text" id="pname" placeholder="预设名（留空自动取）" style="flex:1;min-width:160px" />
+        <button class="btn" id="btn-import">导入并启用</button>
       </div>
     </div>
 
     <div class="card">
-      <h2>褰撳墠鐢熸晥</h2>
-      <div class="row"><span>棰勮</span><span id="p-active">鍐呯疆</span></div>
-      <div class="row"><span>鏉ユ簮</span><span id="p-active-src">bundled</span></div>
-      <div class="row"><span>瀛楃鏁?/span><span id="p-active-len">鈥?/span></div>
+      <h2>当前生效</h2>
+      <div class="row"><span>预设</span><span id="p-active">内置</span></div>
+      <div class="row"><span>来源</span><span id="p-active-src">bundled</span></div>
+      <div class="row"><span>字符数</span><span id="p-active-len">—</span></div>
       <div class="bar" style="margin-top:12px">
-        <button class="btn ghost" id="btn-preview">棰勮瀹為檯娉ㄥ叆鍐呭</button>
-        <button class="btn ghost" id="btn-fallback">鍒囧洖鍐呯疆</button>
+        <button class="btn ghost" id="btn-preview">预览实际注入内容</button>
+        <button class="btn ghost" id="btn-fallback">切回内置</button>
       </div>
       <pre id="p-preview" style="margin-top:12px;display:none"></pre>
       <div class="hint" style="margin-top:12px">
-        杩欐鍐呭浼氳嚜鍔ㄥ墠缃埌姣忔 <code>/v1/table/fill</code> 璇锋眰锛?        閰掗鏁版嵁搴撴彃浠跺～琛ㄦ椂鐢ㄧ殑灏辨槸瀹冦€?      </div>
+        这段内容会自动前置到每次 <code>/v1/table/fill</code> 请求，
+        酒馆数据库插件填表时用的就是它。
+      </div>
     </div>
   </div>
 
   <div class="card">
-    <h2>宸插鍏ョ殑棰勮</h2>
+    <h2>已导入的预设</h2>
     <div class="plist" id="plist">
-      <div class="hint">杩樻病鏈夊鍏ヤ换浣曢璁俱€?/div>
+      <div class="hint">还没有导入任何预设。</div>
     </div>
   </div>
 
   <div class="card" style="margin-top:14px">
-    <h2>闄勫姞璁剧疆锛堜繚瀛樺湪 config.json锛?/h2>
+    <h2>附加设置（保存在 config.json）</h2>
     <label class="field">
-      <span>鑱婂ぉ璺緞闄勫姞鎻愮ず璇嶏紙鍙€夛紝瀹㈡埛绔?system 涔嬪悗锛?/span>
-      <textarea id="chat-suffix" placeholder="鐣欑┖鍗冲彲銆傞璁惧凡瑕嗙洊鐮撮檺鏃朵笉瑕佸啀鍔狅紝浼氬墛寮辨寚浠よ窡闅忋€?></textarea>
+      <span>聊天路径附加提示词（可选，客户端 system 之后）</span>
+      <textarea id="chat-suffix" placeholder="留空即可。预设已覆盖破限时不要再加，会削弱指令跟随。"></textarea>
     </label>
     <label class="field">
-      <span>Assistant Prefix锛堝彲閫夛紝寮哄埗缁啓鑰岄潪寮€鏂板満锛?/span>
-      <textarea id="prefill" style="min-height:70px" placeholder="鐣欑┖鍗冲彲"></textarea>
+      <span>Assistant Prefix（可选，强制续写而非开新场）</span>
+      <textarea id="prefill" style="min-height:70px" placeholder="留空即可"></textarea>
     </label>
     <div class="bar">
-      <button class="btn" id="btn-save-settings">淇濆瓨璁剧疆</button>
+      <button class="btn" id="btn-save-settings">保存设置</button>
       <span class="hint" id="settings-hint"></span>
     </div>
   </div>
 </section>
 
-<!-- ============ 娴嬭瘯 ============ -->
+<!-- ============ 测试 ============ -->
 <section class="page" id="page-test">
   <div class="card" style="margin-bottom:14px">
-    <h2>杩為€氭€ц嚜娴?/h2>
+    <h2>连通性自测</h2>
     <div class="bar" style="margin-bottom:10px">
-      <input type="text" id="q" value="鐢ㄤ竴鍙ヤ腑鏂囧洖绛旓細1+1 绛変簬鍑? style="flex:1;min-width:220px" />
-      <button class="btn" id="btn-ask">鍙戦€?/button>
-      <button class="btn ghost" id="btn-reset">閲嶇疆浼氳瘽</button>
+      <input type="text" id="q" value="用一句中文回答：1+1 等于几" style="flex:1;min-width:220px" />
+      <button class="btn" id="btn-ask">发送</button>
+      <button class="btn ghost" id="btn-reset">重置会话</button>
     </div>
-    <pre id="answer">绛夊緟璇锋眰鈥?/pre>
+    <pre id="answer">等待请求…</pre>
   </div>
 
   <div class="card">
-    <h2>鎵归噺濉〃锛?v1/table/fill锛?/h2>
+    <h2>批量填表（/v1/table/fill）</h2>
     <textarea id="fill-body" style="min-height:190px">{
-  "context": "瑙掕壊锛氭矆鐮氾紝28宀侊紝鎭嬩汉鍏崇郴锛屾垚骞淬€傚満鏅細娣卞鍗у锛屽垰浠庝竴鍦轰簤鎵ч噷鍜屽ソ锛岃。琛崐瑙ｃ€?,
+  "context": "角色：沈砚，28岁，恋人关系，成年。场景：深夜卧室，刚从一场争执里和好，衣衫半解。",
   "columns": [
-    { "key": "name", "desc": "瑙掕壊鍚? },
-    { "key": "state", "desc": "韬綋鐘舵€侊紝涓€鍙ワ紝瑕佸叿浣? },
-    { "key": "clothing", "desc": "姝ゅ埢琛ｇ墿鐘舵€侊紝鍐欐竻鍝簺杩樺湪銆佸摢浜涘凡瑜笅" },
-    { "key": "want", "desc": "姝ゅ埢鐨勬鏈涳紝鐩寸櫧锛屼笉鐢ㄥ濠夎" }
+    { "key": "name", "desc": "角色名" },
+    { "key": "state", "desc": "身体状态，一句，要具体" },
+    { "key": "clothing", "desc": "此刻衣物状态，写清哪些还在、哪些已褪下" },
+    { "key": "want", "desc": "此刻的欲望，直白，不用委婉语" }
   ],
-  "rows": [ { "name": "娌堢牃" } ]
+  "rows": [ { "name": "沈砚" } ]
 }</textarea>
     <div class="bar" style="margin-top:10px">
-      <button class="btn" id="btn-fill">濉〃</button>
-      <span class="hint">涓€娆¤姹傚洖鏁磋锛屾浛浠ｉ€愬瓧娈典覆琛?/span>
+      <button class="btn" id="btn-fill">填表</button>
+      <span class="hint">一次请求回整行，替代逐字段串行</span>
     </div>
-    <pre id="fill-out" style="margin-top:10px">绛夊緟璇锋眰鈥?/pre>
+    <pre id="fill-out" style="margin-top:10px">等待请求…</pre>
   </div>
 </section>
 
-<!-- ============ 鐘舵€?============ -->
+<!-- ============ 状态 ============ -->
 <section class="page" id="page-status">
   <div class="grid g3" style="margin-bottom:14px">
     <div class="card">
-      <h2>鏈嶅姟</h2>
-      <div class="row"><span>Bridge</span><span id="st-bridge">鈥?/span></div>
-      <div class="row"><span>娴忚鍣?/span><span id="st-browser">鈥?/span></div>
-      <div class="row"><span>骞跺彂妲戒綅</span><span id="st-conc">鈥?/span></div>
-      <div class="row"><span>妯″瀷鍒悕</span><span id="st-model">鈥?/span></div>
+      <h2>服务</h2>
+      <div class="row"><span>Bridge</span><span id="st-bridge">—</span></div>
+      <div class="row"><span>浏览器</span><span id="st-browser">—</span></div>
+      <div class="row"><span>并发槽位</span><span id="st-conc">—</span></div>
+      <div class="row"><span>模型别名</span><span id="st-model">—</span></div>
     </div>
     <div class="card">
-      <h2>鎺ュ叆淇℃伅</h2>
-      <div class="row"><span>褰撳墠鍏ュ彛</span><span id="st-site">鈥?/span></div>
-      <div class="row"><span>鍏ュ彛鍚嶇О</span><span id="st-site-label">鈥?/span></div>
-      <div class="row"><span>绔欑偣鍦板潃</span><span id="st-site-origin" style="font-size:11px">鈥?/span></div>
-      <div class="row"><span>璇█</span><span id="st-site-locale">鈥?/span></div>
-      <div class="row"><span>Base URL</span><span id="st-base">鈥?/span></div>
-      <div class="row"><span>璁よ瘉</span><span id="st-auth">鈥?/span></div>
-      <div class="row"><span>鐮撮檺</span><span id="st-jb">鈥?/span></div>
+      <h2>接入信息</h2>
+      <div class="row"><span>当前入口</span><span id="st-site">—</span></div>
+      <div class="row"><span>入口名称</span><span id="st-site-label">—</span></div>
+      <div class="row"><span>站点地址</span><span id="st-site-origin" style="font-size:11px">—</span></div>
+      <div class="row"><span>语言</span><span id="st-site-locale">—</span></div>
+      <div class="row"><span>Base URL</span><span id="st-base">—</span></div>
+      <div class="row"><span>认证</span><span id="st-auth">—</span></div>
+      <div class="row"><span>破限</span><span id="st-jb">—</span></div>
     </div>
     <div class="card">
       <h2>API Key</h2>
-      <div class="row"><span>宸叉湁</span><span id="st-keys">鈥?/span></div>
+      <div class="row"><span>已有</span><span id="st-keys">—</span></div>
       <div class="bar" style="margin-top:10px">
-        <input type="text" id="key-in" placeholder="绮樿创 key 濉繘閰掗" style="flex:1;min-width:140px" />
-        <button class="btn ghost" id="btn-copy">澶嶅埗</button>
-        <button class="btn ghost" id="btn-mint">鏂板缓</button>
+        <input type="text" id="key-in" placeholder="粘贴 key 填进酒馆" style="flex:1;min-width:140px" />
+        <button class="btn ghost" id="btn-copy">复制</button>
+        <button class="btn ghost" id="btn-mint">新建</button>
       </div>
     </div>
   </div>
 
   <div class="card">
-    <h2>閰掗閰嶇疆</h2>
-    <pre id="st-tavern">鈥?/pre>
+    <h2>酒馆配置</h2>
+    <pre id="st-tavern">—</pre>
   </div>
 </section>
 
@@ -567,7 +583,7 @@ async function switchSite(id) {
     const d = await api('/v1/sites/switch', { method: 'POST', body: { site: id } });
     activeSite = d.active;
     localStorage.setItem('ds-bridge-site', activeSite);
-    toast(`宸插垏鍒?{d.label}锛?{d.origin}锛塦);
+    toast(`已切到${d.label}（${d.origin}）`);
     // The screencast is per-site, so the old stream must be torn down.
     if (es) { es.close(); es = null; }
     await loadSites();
@@ -615,19 +631,19 @@ document.querySelectorAll('nav button').forEach(btn => {
 });
 
 /* ------------------------------------------------------------------ */
-/* live view 鈥?disabled: login happens in the real browser window now.  */
+/* live view — disabled: login happens in the real browser window now.  */
 /* The screencast canvas was removed from the page; only a tiny status  */
-/* probe remains so "鍦ㄧ嚎" in the header still works.                   */
+/* probe remains so "在线" in the header still works.                   */
 /* ------------------------------------------------------------------ */
 let es = null;
 
 function connectView() {
   // No canvas anymore: just check the service is alive for the header dot.
   fetch('/health').then(r => r.json()).then(() => {
-    set('h-conn', '鍦ㄧ嚎');
+    set('h-conn', '在线');
     $('dot').classList.add('ok');
   }).catch(() => {
-    set('h-conn', '绂荤嚎');
+    set('h-conn', '离线');
     $('dot').classList.remove('ok');
   });
 }
@@ -641,36 +657,36 @@ async function sendInput() {}
 /* ------------------------------------------------------------------ */
 /* login status                                                        */
 /* ------------------------------------------------------------------ */
-/** Formats the account identity for the 鐧诲綍韬唤 row. */
+/** Formats the account identity for the 登录身份 row. */
 function accountLabel(a) {
-  if (!a) return '宸茬櫥褰曪紙韬唤鏈彇寰楋級';
-  if (a.email) return a.name ? `${a.name}锛?{a.email}锛塦 : a.email;
+  if (!a) return '已登录（身份未取得）';
+  if (a.email) return a.name ? `${a.name}（${a.email}）` : a.email;
   if (a.phone) {
     const p = a.phone.startsWith('+') || a.phone.startsWith('1') && a.phone.length > 11 ? a.phone : (a.areaCode || '') + ' ' + a.phone;
-    return a.name ? `${a.name}锛?{p}锛塦 : p;
+    return a.name ? `${a.name}（${p}）` : p;
   }
-  if (a.id) return a.id.slice(0, 8) + '鈥?;
-  return '宸茬櫥褰曪紙鏈彇寰楄韩浠斤級';
+  if (a.id) return a.id.slice(0, 8) + '…';
+  return '已登录（未取得身份）';
 }
 
 async function checkLogin() {
-  set('s-login', '妫€鏌ヤ腑鈥?);
+  set('s-login', '检查中…');
   try {
     const q = activeSite ? ('?site=' + encodeURIComponent(activeSite)) : '';
     const d = await api('/v1/login/check' + q);
     if (d.ok) {
-      set('s-login', '宸茬櫥褰?, 'ok');
+      set('s-login', '已登录', 'ok');
       set('s-account', accountLabel(d.account), d.account ? 'ok' : 'warn');
-      set('s-token', d.tokenLength + ' 瀛楃');
+      set('s-token', d.tokenLength + ' 字符');
     } else {
-      set('s-login', '鏈櫥褰?, 'bad');
-      set('s-account', '鈥?);
-      set('s-token', '鈥?);
+      set('s-login', '未登录', 'bad');
+      set('s-account', '—');
+      set('s-token', '—');
     }
   } catch (e) {
-    set('s-login', '妫€鏌ュけ璐?, 'bad');
-    set('s-account', '鈥?);
-    set('s-token', '鈥?);
+    set('s-login', '检查失败', 'bad');
+    set('s-account', '—');
+    set('s-token', '—');
   }
 }
 
@@ -678,12 +694,12 @@ async function checkLogin() {
 /* logout / account switch                                             */
 /* ------------------------------------------------------------------ */
 async function doLogout(asSwitch) {
-  const word = asSwitch ? '鍒囨崲璐﹀彿' : '閫€鍑虹櫥褰?;
-  if (!confirm(word + '浼氭竻鎺夊綋鍓? + (siteList.find(s => s.id === activeSite)?.label || activeSite) + '鐨勭櫥褰曠姸鎬侊紝缁х画锛?)) return;
+  const word = asSwitch ? '切换账号' : '退出登录';
+  if (!confirm(word + '会清掉当前' + (siteList.find(s => s.id === activeSite)?.label || activeSite) + '的登录状态，继续？')) return;
   try {
     const d = await api('/v1/account/logout', { method: 'POST', body: { site: activeSite, switch: asSwitch === true } });
-    if (!d.ok) throw new Error(d.error || '澶辫触');
-    toast(asSwitch ? '宸查€€鍑猴紝鐢ㄣ€屾墦寮€ DeepSeek 鐧诲綍绐楀彛銆嶇櫥褰曟柊璐﹀彿' : '宸查€€鍑虹櫥褰?);
+    if (!d.ok) throw new Error(d.error || '失败');
+    toast(asSwitch ? '已退出，用「打开 DeepSeek 登录窗口」登录新账号' : '已退出登录');
     await checkLogin();
     await refreshHealth();
   } catch (e) { toast(e.message, true); }
@@ -708,11 +724,11 @@ $('btn-check-login-2').onclick = () => checkLogin();
  */
 $('btn-paste-token').onclick = async () => {
   const raw = $('manual-token').value.trim();
-  if (!raw) { toast('鍏堢矘璐?userToken 鎴栫櫥褰曞悗椤甸潰鐨勫畬鏁?URL', true); return; }
+  if (!raw) { toast('先粘贴 userToken 或登录后页面的完整 URL', true); return; }
   try {
     const d = await api('/v1/login/token', { method: 'POST', body: { site: activeSite, token: raw } });
-    if (!d.ok) throw new Error(d.error || '娉ㄥ叆澶辫触');
-    toast('鐧诲綍鎬佸凡娉ㄥ叆' + (d.label ? '锛? + d.label : ''));
+    if (!d.ok) throw new Error(d.error || '注入失败');
+    toast('登录态已注入' + (d.label ? '：' + d.label : ''));
     $('manual-token').value = '';
     await checkLogin();
   } catch (e) { toast(e.message, true); }
@@ -720,18 +736,18 @@ $('btn-paste-token').onclick = async () => {
 
 // Copy the firewall rule command from the phone guide.
 $('btn-copy-fw').onclick = async () => {
-  try { await navigator.clipboard.writeText($('fw-cmd').textContent.trim()); toast('宸插鍒讹紝绠＄悊鍛?PowerShell 閲岀矘璐磋繍琛?); }
-  catch { toast('澶嶅埗澶辫触锛屾墜鍔ㄩ€変腑鍛戒护澶嶅埗', true); }
+  try { await navigator.clipboard.writeText($('fw-cmd').textContent.trim()); toast('已复制，管理员 PowerShell 里粘贴运行'); }
+  catch { toast('复制失败，手动选中命令复制', true); }
 };
 // Copy the token-grabber snippet from the phone login instructions.
 $('btn-copy-snippet').onclick = async () => {
-  try { await navigator.clipboard.writeText($('token-snippet').textContent.trim()); toast('宸插鍒讹紝鍒扮郴缁熸祻瑙堝櫒鐨勪功绛炬垨鍦板潃鏍忛噷绮樿创鎵ц'); }
-  catch { toast('澶嶅埗澶辫触锛岄暱鎸変唬鐮佹墜鍔ㄩ€夋嫨澶嶅埗', true); }
+  try { await navigator.clipboard.writeText($('token-snippet').textContent.trim()); toast('已复制，到系统浏览器的书签或地址栏里粘贴执行'); }
+  catch { toast('复制失败，长按代码手动选择复制', true); }
 };
 // Copy the Termux install command from the phone guide.
 $('btn-copy-termux').onclick = async () => {
-  try { await navigator.clipboard.writeText($('termux-cmd').textContent.trim()); toast('宸插鍒讹紝鍒?Termux 閲岄暱鎸夌矘璐?); }
-  catch { toast('澶嶅埗澶辫触锛屾墜鍔ㄩ€変腑鍛戒护澶嶅埗', true); }
+  try { await navigator.clipboard.writeText($('termux-cmd').textContent.trim()); toast('已复制，到 Termux 里长按粘贴'); }
+  catch { toast('复制失败，手动选中命令复制', true); }
 };
 
 /* ------------------------------------------------------------------ */
@@ -744,56 +760,56 @@ async function refreshPresets() {
     list.textContent = '';
 
     if (!d.items || d.items.length === 0) {
-      list.appendChild(el('div', 'hint', '杩樻病鏈夊鍏ヤ换浣曢璁俱€傛嫋涓€涓厭棣嗛璁炬枃浠跺埌涓婇潰璇曡瘯銆?));
+      list.appendChild(el('div', 'hint', '还没有导入任何预设。拖一个酒馆预设文件到上面试试。'));
     } else {
       for (const item of d.items) {
         const row = el('div', 'pitem' + (item.name === d.active ? ' active' : ''));
         const info = el('div');
         const nm = el('div', 'pname', item.name);
         if (item.name === d.active) {
-          const t = el('span', 'tag g', '鐢熸晥涓?);
+          const t = el('span', 'tag g', '生效中');
           nm.appendChild(t);
         }
         info.appendChild(nm);
         info.appendChild(el('div', 'pmeta',
-          `${item.source} 路 main ${item.sizes.main} / nsfw ${item.sizes.nsfw} / jb ${item.sizes.jailbreak}`));
+          `${item.source} · main ${item.sizes.main} / nsfw ${item.sizes.nsfw} / jb ${item.sizes.jailbreak}`));
         row.appendChild(info);
 
         const act = el('div', 'pact');
         if (item.name !== d.active) {
-          const bUse = el('button', 'btn ghost', '鍚敤');
+          const bUse = el('button', 'btn ghost', '启用');
           bUse.onclick = async () => {
             try {
               await api('/v1/presets/activate', { method: 'POST', body: { name: item.name } });
-              toast('宸插惎鐢?' + item.name);
+              toast('已启用 ' + item.name);
               refreshPresets();
             } catch (e) { toast(e.message, true); }
           };
           act.appendChild(bUse);
         }
-        const bView = el('button', 'btn ghost', '鏌ョ湅');
+        const bView = el('button', 'btn ghost', '查看');
         bView.onclick = async () => {
           try {
             const p = await api('/v1/presets/get?name=' + encodeURIComponent(item.name));
             $('p-preview').style.display = 'block';
-            $('p-preview').textContent = p.composed || '(绌?';
+            $('p-preview').textContent = p.composed || '(空)';
             $('p-preview').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
           } catch (e) { toast(e.message, true); }
         };
         act.appendChild(bView);
 
-        const bExp = el('button', 'btn ghost', '瀵煎嚭');
+        const bExp = el('button', 'btn ghost', '导出');
         bExp.onclick = () => {
           window.open('/v1/presets/export?name=' + encodeURIComponent(item.name), '_blank');
         };
         act.appendChild(bExp);
 
-        const bDel = el('button', 'btn danger', '鍒犻櫎');
+        const bDel = el('button', 'btn danger', '删除');
         bDel.onclick = async () => {
-          if (!confirm('鍒犻櫎棰勮 ' + item.name + '锛?)) return;
+          if (!confirm('删除预设 ' + item.name + '？')) return;
           try {
             await api('/v1/presets/delete', { method: 'POST', body: { name: item.name } });
-            toast('宸插垹闄?);
+            toast('已删除');
             refreshPresets();
           } catch (e) { toast(e.message, true); }
         };
@@ -804,7 +820,7 @@ async function refreshPresets() {
       }
     }
 
-    set('p-active', d.active || '鍐呯疆');
+    set('p-active', d.active || '内置');
     set('p-active-src', d.active ? 'imported' : 'bundled');
   } catch (e) {
     toast(e.message, true);
@@ -817,18 +833,18 @@ async function refreshPreviewMeta() {
     const d = await api('/v1/presets/preview');
     set('p-active', d.from);
     set('p-active-src', d.source);
-    set('p-active-len', d.length + ' 瀛楃');
+    set('p-active-len', d.length + ' 字符');
   } catch { /* ignore */ }
 }
 
 async function doImport(content, filename, name) {
-  if (!content || !content.trim()) { toast('鍐呭涓虹┖', true); return; }
+  if (!content || !content.trim()) { toast('内容为空', true); return; }
   try {
     const d = await api('/v1/presets/import', {
       method: 'POST',
       body: { content, filename: filename || 'preset.json', name: name || '', activate: true },
     });
-    toast(`宸插鍏?${d.name}锛?{d.source}锛夊苟鍚敤`);
+    toast(`已导入 ${d.name}（${d.source}）并启用`);
     $('paste').value = '';
     $('pname').value = '';
     refreshPresets();
@@ -859,7 +875,7 @@ $('file').onchange = ev => { const f = ev.target.files[0]; if (f) readFile(f); }
 function readFile(f) {
   const reader = new FileReader();
   reader.onload = () => doImport(String(reader.result), f.name, $('pname').value.trim() || f.name.replace(/\.(json|txt)$/i, ''));
-  reader.onerror = () => toast('璇绘枃浠跺け璐?, true);
+  reader.onerror = () => toast('读文件失败', true);
   reader.readAsText(f, 'utf-8');
 }
 
@@ -868,14 +884,14 @@ $('btn-preview').onclick = async () => {
     const d = await api('/v1/presets/preview');
     const pre = $('p-preview');
     pre.style.display = 'block';
-    pre.textContent = d.text || '(绌?';
+    pre.textContent = d.text || '(空)';
   } catch (e) { toast(e.message, true); }
 };
 
 $('btn-fallback').onclick = async () => {
   try {
     await api('/v1/presets/activate', { method: 'POST', body: { name: '' } });
-    toast('宸插垏鍥炲唴缃牬闄?);
+    toast('已切回内置破限');
     refreshPresets();
   } catch (e) { toast(e.message, true); }
 };
@@ -894,7 +910,7 @@ $('btn-save-settings').onclick = async () => {
       method: 'POST',
       body: { chatSystemSuffix: $('chat-suffix').value, assistantPrefill: $('prefill').value },
     });
-    set('settings-hint', '宸蹭繚瀛樺埌 config.json', 'ok');
+    set('settings-hint', '已保存到 config.json', 'ok');
     setTimeout(() => set('settings-hint', ''), 2500);
   } catch (e) { toast(e.message, true); }
 };
@@ -905,7 +921,7 @@ $('btn-save-settings').onclick = async () => {
 $('btn-ask').onclick = async () => {
   const q = $('q').value.trim();
   if (!q) return;
-  $('answer').textContent = '璇锋眰涓€?;
+  $('answer').textContent = '请求中…';
   $('btn-ask').disabled = true;
   const t0 = performance.now();
   try {
@@ -915,36 +931,36 @@ $('btn-ask').onclick = async () => {
     });
     const ms = Math.round(performance.now() - t0);
     const text = d?.choices?.[0]?.message?.content ?? JSON.stringify(d, null, 2);
-    $('answer').textContent = text + `\n\n鈥?鑰楁椂 ${ms} ms`;
+    $('answer').textContent = text + `\n\n— 耗时 ${ms} ms`;
   } catch (e) {
-    $('answer').textContent = '閿欒: ' + e.message;
+    $('answer').textContent = '错误: ' + e.message;
   } finally {
     $('btn-ask').disabled = false;
   }
 };
 
 $('btn-fill').onclick = async () => {
-  $('fill-out').textContent = '璇锋眰涓€?;
+  $('fill-out').textContent = '请求中…';
   $('btn-fill').disabled = true;
   const t0 = performance.now();
   try {
     const body = JSON.parse($('fill-body').value);
     const d = await api('/v1/table/fill', { method: 'POST', body });
     const ms = Math.round(performance.now() - t0);
-    $('fill-out').textContent = JSON.stringify(d, null, 2) + `\n\n鈥?鑰楁椂 ${ms} ms`;
+    $('fill-out').textContent = JSON.stringify(d, null, 2) + `\n\n— 耗时 ${ms} ms`;
   } catch (e) {
-    $('fill-out').textContent = '閿欒: ' + e.message;
+    $('fill-out').textContent = '错误: ' + e.message;
   } finally {
     $('btn-fill').disabled = false;
   }
 };
 
 $('btn-reset').onclick = async () => {
-  $('answer').textContent = '閲嶇疆涓€?;
+  $('answer').textContent = '重置中…';
   try {
     const d = await api('/v1/session/reset', { method: 'POST', body: {} });
     $('answer').textContent = JSON.stringify(d, null, 2);
-  } catch (e) { $('answer').textContent = '閿欒: ' + e.message; }
+  } catch (e) { $('answer').textContent = '错误: ' + e.message; }
 };
 
 /* ------------------------------------------------------------------ */
@@ -954,18 +970,18 @@ async function refreshHealth() {
   try {
     const r = await fetch('/health');
     const d = await r.json();
-    set('h-model', d.model || '鈥?);
-    set('st-bridge', '鍦ㄧ嚎', 'ok');
-    set('st-browser', d.browser === 'ok' ? '宸茶繛鎺? : d.browser, d.browser === 'ok' ? 'ok' : 'bad');
+    set('h-model', d.model || '—');
+    set('st-bridge', '在线', 'ok');
+    set('st-browser', d.browser === 'ok' ? '已连接' : d.browser, d.browser === 'ok' ? 'ok' : 'bad');
     set('st-conc', String(d.concurrency));
     set('st-model', d.model);
-    set('st-auth', d.authRequired ? '闇€瑕?Key' : '寮€鏀?, d.authRequired ? 'warn' : 'bad');
-    set('st-jb', d.fillJailbreak ? `宸叉敞鍏ワ紙${d.preset || '鍐呯疆'}锛塦 : '鏈敞鍏?, d.fillJailbreak ? 'ok' : 'warn');
+    set('st-auth', d.authRequired ? '需要 Key' : '开放', d.authRequired ? 'warn' : 'bad');
+    set('st-jb', d.fillJailbreak ? `已注入（${d.preset || '内置'}）` : '未注入', d.fillJailbreak ? 'ok' : 'warn');
     if (d.site) {
       set('st-site', d.site);
       set('st-site-label', d.siteLabel || d.site);
-      set('st-site-origin', d.siteOrigin || '鈥?);
-      set('st-site-locale', d.siteLocale || '鈥?);
+      set('st-site-origin', d.siteOrigin || '—');
+      set('st-site-locale', d.siteLocale || '—');
     }
     // Mirror pool state into the header switcher without a second round trip.
     if (Array.isArray(d.sites)) {
@@ -980,14 +996,14 @@ async function refreshHealth() {
       set('lan-url', `http://${ips[0]}:${port}/`);
       set('lan-base', `http://${ips[0]}:${port}/v1`);
     } else {
-      set('lan-ip', '鏈娴嬪埌灞€鍩熺綉缃戝崱锛堝彲鑳藉彧鏈夊唴缃戣櫄鎷熺綉鍗★級');
+      set('lan-ip', '未检测到局域网网卡（可能只有内网虚拟网卡）');
     }
-    set('h-conn', '鍦ㄧ嚎');
+    set('h-conn', '在线');
     $('dot').classList.add('ok');
   } catch {
-    set('h-conn', '绂荤嚎');
+    set('h-conn', '离线');
     $('dot').classList.remove('ok');
-    set('st-bridge', '绂荤嚎', 'bad');
+    set('st-bridge', '离线', 'bad');
   }
 }
 
@@ -1001,23 +1017,23 @@ async function refreshStatus() {
   const base = baseUrl();
   set('st-base', base);
   set('st-tavern',
-    `Base URL : ${base}\nAPI Key  : ${activeKey || '(杩樻病鍙?key锛岃鍙充晶)'}\nModel    : deepseek-web\n\n` +
-    `濉〃绔偣 : ${base}/table/fill\n棰勮       : 鍦ㄣ€岄璁俱€嶉〉瀵煎叆骞跺惎鐢╜);
+    `Base URL : ${base}\nAPI Key  : ${activeKey || '(还没取 key，见右侧)'}\nModel    : deepseek-web\n\n` +
+    `填表端点 : ${base}/table/fill\n预设       : 在「预设」页导入并启用`);
 
   try {
     const d = await api('/v1/keys');
-    const labels = (d.keys || []).map(k => `${k.label} 鈥?{k.suffix}`).join('  |  ');
-    set('st-keys', labels || '鈥?);
+    const labels = (d.keys || []).map(k => `${k.label} …${k.suffix}`).join('  |  ');
+    set('st-keys', labels || '—');
   } catch { /* ignore */ }
 
   try {
     const d = await fetch('/health').then(r => r.json());
-    set('st-jb', d.fillJailbreak ? `宸叉敞鍏ワ紙${d.preset || '鍐呯疆'}锛塦 : '鏈敞鍏?, d.fillJailbreak ? 'ok' : 'warn');
+    set('st-jb', d.fillJailbreak ? `已注入（${d.preset || '内置'}）` : '未注入', d.fillJailbreak ? 'ok' : 'warn');
   } catch { /* ignore */ }
 }
 
 $('btn-mint').onclick = async () => {
-  const label = prompt('缁欐柊 Key 璧蜂釜鏍囩锛堟瘮濡?phone銆乻cript锛?, 'client');
+  const label = prompt('给新 Key 起个标签（比如 phone、script）', 'client');
   if (!label) return;
   try {
     const d = await api('/v1/keys', { method: 'POST', body: { label } });
@@ -1025,7 +1041,7 @@ $('btn-mint').onclick = async () => {
       $('key-in').value = d.key;
       activeKey = d.key;
       localStorage.setItem('ds-bridge-key', d.key);
-      toast('鏂?Key 宸茬敓鎴?);
+      toast('新 Key 已生成');
       refreshStatus();
       connectView();
     }
@@ -1034,9 +1050,9 @@ $('btn-mint').onclick = async () => {
 
 $('btn-copy').onclick = async () => {
   const v = $('key-in').value.trim();
-  if (!v) { toast('鍏堝彇涓€涓?key', true); return; }
-  try { await navigator.clipboard.writeText(v); toast('宸插鍒?); }
-  catch { $('key-in').select(); toast('璇锋墜鍔ㄥ鍒讹紙宸插叏閫夛級'); }
+  if (!v) { toast('先取一个 key', true); return; }
+  try { await navigator.clipboard.writeText(v); toast('已复制'); }
+  catch { $('key-in').select(); toast('请手动复制（已全选）'); }
 };
 
 $('key-in').addEventListener('input', e => {
@@ -1063,7 +1079,7 @@ async function bootstrapKey() {
       activeKey = d.key;
       localStorage.setItem('ds-bridge-key', d.key);
       $('key-in').value = d.key;
-      set('s-keys', `${d.label} 鈥?{d.key.slice(-6)}`);
+      set('s-keys', `${d.label} …${d.key.slice(-6)}`);
     }
   } catch { /* open bridge, or not localhost */ }
 }
