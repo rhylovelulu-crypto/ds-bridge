@@ -107,6 +107,7 @@ say "==========================================="
 say " 服务地址（本机）   http://127.0.0.1:8788/v1"
 say " 局域网             http://<手机IP>:8788/v1"
 say " 酒馆填上面任意一个 + API Key 即可"
+say " 即将自动打开控制台网页，没弹出就手动访问上面地址"
 say "==========================================="
 say " 首次登录（推荐）：电脑上登录过 ds-bridge 的话，把电脑用户目录下的"
 say " .ds-bridge-profile-cn 文件夹传到手机，然后执行："
@@ -115,5 +116,21 @@ say " 再重启本脚本即可，不用扫码。"
 say " 以后重启服务（无论脚本原文件夹还在不在，直接跑）："
 say "   bash ~/ds-bridge/termux-setup.sh --start"
 say "==========================================="
+
+# Open the console in the phone's browser automatically. termux-open-url is
+# part of termux-tools (installed by default); if it's missing, fall back to
+# termux-open, then am, then just print the URL. Fire-and-forget: the server
+# must not fail to start over a missing opener.
+(
+  sleep 3   # give the server a moment to bind the port
+  URL="http://127.0.0.1:8788/"
+  if command -v termux-open-url >/dev/null 2>&1; then
+    termux-open-url "$URL"
+  elif command -v termux-open >/dev/null 2>&1; then
+    termux-open "$URL"
+  else
+    am start -a android.intent.action.VIEW -d "$URL" >/dev/null 2>&1 || true
+  fi
+) &
 
 exec node server.mjs
