@@ -205,10 +205,27 @@
       <span id="v-status" class="hint"></span>
     </div>
     <div class="bar" style="margin-top:10px">
-      <button class="btn" id="btn-open-login" style="padding:10px 22px;font-size:14px">打开 DeepSeek 登录窗口</button>
+      <a class="btn" id="btn-open-login" style="text-decoration:none;display:inline-block" href="https://chat.deepseek.com/sign_in" target="_blank">打开 DeepSeek 登录</a>
       <button class="btn ghost" id="btn-check-login">检查登录状态</button>
-      <span class="hint">点上面的按钮，在弹出的浏览器窗口里扫码或输密码登录，登录状态自动保存。</span>
     </div>
+    <div class="bar" style="margin-top:10px">
+      <input type="text" id="manual-token" placeholder="登录后：浏览器地址栏输入 javascript: 会被拦，改用手机浏览器的「查看网页源代码」或书签小工具抓 userToken，粘贴到这里" style="flex:1;min-width:220px;font-size:12px" />
+      <button class="btn ghost" id="btn-paste-token">注入登录态</button>
+    </div>
+    <details style="margin-top:8px">
+      <summary class="hint" style="cursor:pointer">手机上怎么抓 userToken？（点开看步骤）</summary>
+      <div class="hint" style="margin-top:6px;padding:10px;background:var(--panel2);border-radius:8px">
+        1. 点上面「打开 DeepSeek 登录」→ 系统浏览器打开登录页 → 登录成功，看到聊天界面<br />
+        2. 在登录后的页面，<b>复制下面这段代码</b>，然后：<br />
+        &nbsp;&nbsp;• Chrome：地址栏输 <code>javascript:</code> 会自动删掉，所以先把代码复制全，在地址栏先打 <code>j</code> 再粘贴其余部分；或者用「书签」方式：新建书签，网址粘贴整段代码，登录后打开该书签<br />
+        &nbsp;&nbsp;• 更简单：装个「(View Source)」类小应用，或用 Via 浏览器（自带网页源码查看）<br />
+        3. 代码（选中复制）：<br />
+        <code class="copyable" id="token-snippet">javascript:(function(){var r=localStorage.getItem('userToken');var t=r?JSON.parse(r).value:'';if(t){prompt('你的 userToken，长按全选复制：',t);}else{alert('未登录或抓不到 token');}})();</code>
+        <button class="btn ghost" id="btn-copy-snippet" style="padding:4px 10px;font-size:11px">复制代码</button><br />
+        4. 执行后弹窗显示 token → 长按复制 → 粘贴到上面的输入框 → 点「注入登录态」<br />
+        5. 点「检查登录状态」变绿即完成。token 长期有效，注入一次即可
+      </div>
+    </details>
   </div>
 
   <div class="grid g3">
@@ -654,45 +671,42 @@ async function doLogout(asSwitch) {
 $('btn-logout').onclick = () => doLogout(false);
 $('btn-switch-account').onclick = () => doLogout(true);
 
-// Open the sign-in page in the bridge's own browser window (real profile).
-// The system default browser does not share this profile, so it must be the
-// detached window the pool launched — that is also where the login persists.
-$('btn-open-login').onclick = async () => {
+// The big button is now a real <a href target=_blank>: clicking jumps straight
+// to the DeepSeek sign-in page in the phone's own browser. That is what makes
+// "click login -> see the login page" work on Termux: the headless bridge
+// browser has no visible window, but the SYSTEM browser does, and the user can
+// log in there. The token never lives in the system browser though, so after
+// login the user pastes the token back (see the injection bar below).
+$('btn-open-login-2').onclick = () => window.open('https://chat.deepseek.com/sign_in', '_blank');
+$('btn-check-login-2').onclick = () => checkLogin();
+
+/**
+ * Paste-back login: after signing in on the system browser, the user grabs
+ * their userToken and pastes it here; the bridge writes it into the headless
+ * profile's localStorage so workers pick it up. Token capture instructions
+ * are shown inline next to the field.
+ */
+$('btn-paste-token').onclick = async () => {
+  const raw = $('manual-token').value.trim();
+  if (!raw) { toast('先粘贴 userToken 或登录后页面的完整 URL', true); return; }
   try {
-    const d = await api('/v1/view/open', { method: 'POST', body: { site: activeSite, url: 'https://chat.deepseek.com/sign_in' } });
-    if (!d.ok) throw new Error(d.error || '打开失败');
-    toast(d.headless
-      ? '已后台创建登录标签页（无头模式没有可见窗口），若之前导入过登录态稍后自动变绿，否则请在电脑上登录后迁移 profile'
-      : '已在桥的浏览器窗口打开登录页，登录后回到这里检查状态');
-    set('s-login', '等待登录…', 'warn');
-    // Poll a few times so the user sees the flip to 已登录 without manual refresh.
-    let tries = 0;
-    const timer = setInterval(async () => {
-      tries++;
-      try {
-        const q = activeSite ? ('?site=' + encodeURIComponent(activeSite)) : '';
-        const c = await api('/v1/login/check' + q);
-        if (c.ok) {
-          clearInterval(timer);
-          set('s-login', '已登录', 'ok');
-          set('s-account', accountLabel(c.account), c.account ? 'ok' : 'warn');
-          set('s-token', c.tokenLength + ' 字符');
-          toast('登录成功' + (c.account ? '：' + accountLabel(c.account) : ''));
-        } else if (tries > 100) clearInterval(timer);
-      } catch { if (tries > 100) clearInterval(timer); }
-    }, 4000);
+    const d = await api('/v1/login/token', { method: 'POST', body: { site: activeSite, token: raw } });
+    if (!d.ok) throw new Error(d.error || '注入失败');
+    toast('登录态已注入' + (d.label ? '：' + d.label : ''));
+    $('manual-token').value = '';
+    await checkLogin();
   } catch (e) { toast(e.message, true); }
 };
-$('btn-check-login').onclick = () => checkLogin();
-// Duplicate buttons in the status card share the same behavior.
-const openLoginHandler = () => $('btn-open-login').click();
-$('btn-open-login-2').onclick = openLoginHandler;
-$('btn-check-login-2').onclick = () => checkLogin();
 
 // Copy the firewall rule command from the phone guide.
 $('btn-copy-fw').onclick = async () => {
   try { await navigator.clipboard.writeText($('fw-cmd').textContent.trim()); toast('已复制，管理员 PowerShell 里粘贴运行'); }
   catch { toast('复制失败，手动选中命令复制', true); }
+};
+// Copy the token-grabber snippet from the phone login instructions.
+$('btn-copy-snippet').onclick = async () => {
+  try { await navigator.clipboard.writeText($('token-snippet').textContent.trim()); toast('已复制，到系统浏览器的书签或地址栏里粘贴执行'); }
+  catch { toast('复制失败，长按代码手动选择复制', true); }
 };
 // Copy the Termux install command from the phone guide.
 $('btn-copy-termux').onclick = async () => {
