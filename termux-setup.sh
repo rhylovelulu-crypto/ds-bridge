@@ -13,7 +13,7 @@
 # =====================================================================
 set -e
 
-REPO_TARBALL="https://gh-proxy.com/https://github.com/misa1ink/ds-bridge/archive/refs/heads/main.tar.gz"
+REPO_TARBALL="https://gh-proxy.com/https://github.com/rhylovelulu-crypto/ds-bridge/archive/refs/heads/main.tar.gz"
 APP_DIR="$HOME/ds-bridge"
 
 say() { echo -e "\033[1;36m[ds-bridge]\033[0m $*"; }
@@ -57,8 +57,16 @@ elif [ -f "$(dirname "$0")/server.mjs" ] && [ "$(cd "$(dirname "$0")" && pwd)" !
   cp -r "$(dirname "$0")/." "$APP_DIR/"
 elif [ ! -f "$APP_DIR/server.mjs" ]; then
   say "从网络下载代码到 $APP_DIR …"
+  # curl 先于 git：git 可能没装，curl 装得更快、报错也更少。
+  command -v curl >/dev/null || pkg install -y curl
   mkdir -p "$APP_DIR"
-  curl -L "$REPO_TARBALL" | tar -xz -C "$APP_DIR" --strip-components=1 || fail "下载失败，检查网络后重试"
+  if curl -L "$REPO_TARBALL" | tar -xz -C "$APP_DIR" --strip-components=1; then
+    :
+  elif command -v git >/dev/null; then
+    git clone --depth 1 "https://gh-proxy.com/https://github.com/rhylovelulu-crypto/ds-bridge.git" "$APP_DIR" || fail "下载失败，检查网络后重试"
+  else
+    fail "下载失败：先执行 pkg install git curl，再重跑本脚本"
+  fi
 fi
 cd "$APP_DIR"
 
