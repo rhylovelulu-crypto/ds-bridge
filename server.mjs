@@ -673,6 +673,52 @@ if (url.pathname === '/health') {
       return;
     }
 
+    /**
+     * Paste-back login for headless deployments (Termux / servers): the user
+     * signs in on any browser they can see, copies their userToken, and the
+     * bridge writes it into the headless profile's localStorage. Workers read
+     * the token from there, so this makes the whole bridge logged in without
+     * a visible browser or a profile migration.
+     */
+    if (url.pathname === '/v1/login/token' && req.method === 'POST') {
+      const body = JSON.parse(await readBody(req) || '{}');
+      const target = siteConfig(body.site || cfg.site);
+      // Accept either the bare token or a full URL the user copied by mistake.
+      let token = String(body.token || '').trim();
+      const urlMatch = token.match(/[?&]userToken=([^&]+)/);
+      if (urlMatch) token = decodeURIComponent(urlMatch[1]);
+      token = token.replace(/^"|"$/g, '');
+      if (!/^[A-Za-z0-9+/=._-]{20,}$/.test(token)) {
+        json(res, 200, { ok: false, error: 'token 格式不对：需要 localStorage userToken 的 value（长串字母数字），或包含它的内容' });
+        return;
+      }
+      try {
+        const pool = poolFor(target.id);
+        const cdp = await getBrowser(target.id);
+        const stored = JSON.stringify({ value: token, __version: '0' });
+        // Write into every worker tab AND create/refresh the login view state.
+        let wrote = 0;
+        for (const w of pool.workers) {
+          try {
+            await w.cdp.eval(`localStorage.setItem('userToken', ${JSON.stringify(stored)}); location.href.startsWith('${target.origin}') ? 'ok' : 'wrong-origin'`);
+            w._pageReady = false;
+            wrote++;
+          } catch { /* dead tab, will revive on next use */ }
+        }
+        if (wrote === 0) {
+          // Workers all dead: revive one by creating a tab and writing there.
+          const tab = await cdp.newTab(target.origin + '/');
+          await tab.eval(`localStorage.setItem('userToken', ${JSON.stringify(stored)})`);
+          wrote = 1;
+        }
+        log(`[${target.id}] token injected into ${wrote} worker tab(s)`);
+        json(res, 200, { ok: true, site: target.id, wrote });
+      } catch (err) {
+        json(res, 200, { ok: false, error: String(err.message || err) });
+      }
+      return;
+    }
+
     /* ---- presets --------------------------------------------------------- */
 
     if (url.pathname === '/v1/presets' && req.method === 'GET') {
